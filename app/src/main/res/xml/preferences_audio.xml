@@ -9,6 +9,15 @@
             app:summary="@string/set_headset_autoplay_desc"
             app:title="@string/set_headset_autoplay" />
 
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/auto_stop_delay_30m"
+            app:entries="@array/entries_auto_stop_delay"
+            app:entryValues="@array/values_auto_stop_delay"
+            app:key="@string/set_key_auto_stop_delay"
+            app:summary="@string/set_auto_stop_delay_desc"
+            app:title="@string/set_auto_stop_delay"
+            app:useSimpleSummaryProvider="true" />
+
         <SwitchPreferenceCompat
             app:defaultValue="true"
             app:key="@string/set_key_rewind_prev"

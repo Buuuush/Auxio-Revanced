@@ -29,6 +29,7 @@
     <string name="set_key_locations_mode" translatable="false">auxio_locations_mode</string>
 
     <string name="set_key_headset_autoplay" translatable="false">auxio_headset_autoplay</string>
+    <string name="set_key_auto_stop_delay" translatable="false">auxio_auto_stop_delay</string>
     <string name="set_key_replay_gain" translatable="false">auxio_replay_gain</string>
     <string name="set_key_pre_amp" translatable="false">auxio_pre_amp</string>
     <string name="set_key_pre_amp_with" translatable="false">auxio_pre_amp_with</string>
@@ -151,11 +152,25 @@
         <item>@string/set_replay_gain_mode_dynamic</item>
     </string-array>
 
+    <string-array name="entries_auto_stop_delay">
+        <item>@string/set_auto_stop_delay_off</item>
+        <item>@string/set_auto_stop_delay_15</item>
+        <item>@string/set_auto_stop_delay_30</item>
+        <item>@string/set_auto_stop_delay_60</item>
+    </string-array>
+
     <integer-array name="values_replay_gain">
         <item>@integer/replay_gain_off</item>
         <item>@integer/replay_gain_track</item>
         <item>@integer/replay_gain_album</item>
         <item>@integer/replay_gain_dynamic</item>
+    </integer-array>
+
+    <integer-array name="values_auto_stop_delay">
+        <item>@integer/auto_stop_delay_off</item>
+        <item>@integer/auto_stop_delay_15m</item>
+        <item>@integer/auto_stop_delay_30m</item>
+        <item>@integer/auto_stop_delay_60m</item>
     </integer-array>
 
     <integer name="theme_auto">-1</integer>
@@ -173,6 +188,11 @@
     <integer name="replay_gain_track">0xA111</integer>
     <integer name="replay_gain_album">0xA112</integer>
     <integer name="replay_gain_dynamic">0xA113</integer>
+
+    <integer name="auto_stop_delay_off">0</integer>
+    <integer name="auto_stop_delay_15m">15</integer>
+    <integer name="auto_stop_delay_30m">30</integer>
+    <integer name="auto_stop_delay_60m">60</integer>
 
     <integer name="action_mode_next">0xA119</integer>
     <integer name="action_mode_repeat">0xA11A</integer>

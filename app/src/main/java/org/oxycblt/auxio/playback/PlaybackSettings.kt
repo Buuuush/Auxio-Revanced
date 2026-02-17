@@ -39,6 +39,8 @@ interface PlaybackSettings : Settings<PlaybackSettings.Listener> {
     val barAction: ActionMode
     /** Whether to start playback when a headset is plugged in. */
     val headsetAutoplay: Boolean
+    /** Delay in minutes before auto-stopping while paused. 0 disables auto-stop. */
+    val autoStopDelayMinutes: Int
     /** The current ReplayGain configuration. */
     val replayGainMode: ReplayGainMode
     /** The current ReplayGain pre-amp configuration. */
@@ -101,6 +103,13 @@ class PlaybackSettingsImpl @Inject constructor(@ApplicationContext context: Cont
 
     override val headsetAutoplay: Boolean
         get() = sharedPreferences.getBoolean(getString(R.string.set_key_headset_autoplay), false)
+
+    override val autoStopDelayMinutes: Int
+        get() =
+            sharedPreferences.getInt(
+                getString(R.string.set_key_auto_stop_delay),
+                30,
+            )
 
     override val replayGainMode: ReplayGainMode
         get() =

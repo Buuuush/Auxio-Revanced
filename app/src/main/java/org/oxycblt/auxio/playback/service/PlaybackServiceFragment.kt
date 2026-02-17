@@ -88,12 +88,17 @@ private constructor(
         )
 
     private fun scheduleAutoStop() {
+        val delayMinutes = playbackSettings.autoStopDelayMinutes
+        if (delayMinutes <= 0) {
+            cancelAutoStop()
+            return
+        }
         autoStopJob?.cancel()
         autoStopJob =
             scope.launch {
-                delay(AUTO_STOP_DELAY_MS)
+                delay(delayMinutes * 60L * 1000L)
                 L.d(
-                    "Auto-stop timer expired after ${AUTO_STOP_DELAY_MS / 60000} minutes of inactivity"
+                    "Auto-stop timer expired after ${delayMinutes} minutes of inactivity"
                 )
                 playbackManager.endSession()
             }
@@ -200,7 +205,5 @@ private constructor(
         foregroundListener.updateForeground(ForegroundListener.Change.MEDIA_SESSION)
     }
 
-    private companion object {
-        private const val AUTO_STOP_DELAY_MS = 30L * 60L * 1000L
-    }
+    private companion object
 }

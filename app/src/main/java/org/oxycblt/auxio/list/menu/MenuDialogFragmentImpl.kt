@@ -57,8 +57,12 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
     override val parcel
         get() = args.parcel
 
-    // Nothing to disable in song menus.
-    override fun getDisabledItemIds(menu: Menu.ForSong) = setOf<Int>()
+    override fun getDisabledItemIds(menu: Menu.ForSong) =
+        if (musicModel.isSongLiked(menu.song)) {
+            setOf(R.id.action_favorite_add)
+        } else {
+            setOf(R.id.action_favorite_remove)
+        }
 
     override fun updateMenu(binding: DialogMenuBinding, menu: Menu.ForSong) {
         val context = requireContext()
@@ -81,6 +85,14 @@ class SongMenuDialogFragment : MenuDialogFragment<Menu.ForSong>() {
                 requireContext().showToast(R.string.lng_queue_added)
             }
             R.id.action_playlist_add -> musicModel.addToPlaylist(menu.song)
+            R.id.action_favorite_add -> {
+                musicModel.addToLikedSongs(menu.song)
+                requireContext().showToast(R.string.lng_favorite_added)
+            }
+            R.id.action_favorite_remove -> {
+                musicModel.removeFromLikedSongs(menu.song)
+                requireContext().showToast(R.string.lng_favorite_removed)
+            }
             R.id.action_artist_details -> detailModel.showArtist(menu.song)
             R.id.action_album_details -> detailModel.showAlbum(menu.song.album)
             R.id.action_share -> requireContext().share(menu.song)

@@ -356,6 +356,42 @@ constructor(
         }
     }
 
+    fun isSongLiked(song: Song): Boolean {
+        val likedPlaylist = musicRepository.library?.findPlaylistByName(LIKED_PLAYLIST_NAME) ?: return false
+        return likedPlaylist.songs.any { it.uid == song.uid }
+    }
+
+    fun addToLikedSongs(song: Song) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val likedPlaylist = getOrCreateLikedPlaylist() ?: return@launch
+            if (likedPlaylist.songs.any { it.uid == song.uid }) {
+                return@launch
+            }
+            musicRepository.addToPlaylist(listOf(song), likedPlaylist)
+        }
+    }
+
+    fun removeFromLikedSongs(song: Song) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val likedPlaylist = musicRepository.library?.findPlaylistByName(LIKED_PLAYLIST_NAME) ?: return@launch
+            if (likedPlaylist.songs.none { it.uid == song.uid }) {
+                return@launch
+            }
+            musicRepository.rewritePlaylist(
+                likedPlaylist,
+                likedPlaylist.songs.filterNot { it.uid == song.uid },
+            )
+        }
+    }
+
+    private suspend fun getOrCreateLikedPlaylist(): Playlist? {
+        musicRepository.library?.findPlaylistByName(LIKED_PLAYLIST_NAME)?.let {
+            return it
+        }
+        musicRepository.createPlaylist(LIKED_PLAYLIST_NAME, listOf())
+        return musicRepository.library?.findPlaylistByName(LIKED_PLAYLIST_NAME)
+    }
+
     /**
      * Non-manipulated statistics bound the last successful music load.
      *
@@ -373,6 +409,10 @@ constructor(
         val durationMs: Long,
         val totalSizeBytes: Long,
     )
+
+    private companion object {
+        const val LIKED_PLAYLIST_NAME = "Liked Songs"
+    }
 }
 
 /**
