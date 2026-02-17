@@ -18,6 +18,24 @@
             app:title="@string/set_auto_stop_delay"
             app:useSimpleSummaryProvider="true" />
 
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/auto_start_delay_off"
+            app:entries="@array/entries_auto_start_delay"
+            app:entryValues="@array/values_auto_start_delay"
+            app:key="@string/set_key_auto_start_delay"
+            app:summary="@string/set_auto_start_delay_desc"
+            app:title="@string/set_auto_start_delay"
+            app:useSimpleSummaryProvider="true" />
+
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/crossfade_off"
+            app:entries="@array/entries_crossfade_duration"
+            app:entryValues="@array/values_crossfade_duration"
+            app:key="@string/set_key_crossfade_duration"
+            app:summary="@string/set_crossfade_duration_desc"
+            app:title="@string/set_crossfade_duration"
+            app:useSimpleSummaryProvider="true" />
+
         <SwitchPreferenceCompat
             app:defaultValue="true"
             app:key="@string/set_key_rewind_prev"
@@ -60,6 +78,30 @@
             app:summary="@string/set_effect_gain_desc"
             app:title="@string/set_effect_gain"
             app:useSimpleSummaryProvider="true" />
+
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/bass_boost_off"
+            app:entries="@array/entries_bass_boost"
+            app:entryValues="@array/values_bass_boost"
+            app:key="@string/set_key_bass_boost"
+            app:summary="@string/set_bass_boost_desc"
+            app:title="@string/set_bass_boost"
+            app:useSimpleSummaryProvider="true" />
+
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/equalizer_preset_off"
+            app:entries="@array/entries_equalizer_preset"
+            app:entryValues="@array/values_equalizer_preset"
+            app:key="@string/set_key_equalizer_preset"
+            app:summary="@string/set_equalizer_preset_desc"
+            app:title="@string/set_equalizer_preset"
+            app:useSimpleSummaryProvider="true" />
+
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:key="@string/set_key_equalizer_auto_genre"
+            app:summary="@string/set_equalizer_auto_genre_desc"
+            app:title="@string/set_equalizer_auto_genre" />
 
         <org.oxycblt.auxio.settings.ui.IntListPreference
             app:defaultValue="@integer/reverb_off"

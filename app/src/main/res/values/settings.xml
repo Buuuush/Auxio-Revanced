@@ -30,12 +30,17 @@
 
     <string name="set_key_headset_autoplay" translatable="false">auxio_headset_autoplay</string>
     <string name="set_key_auto_stop_delay" translatable="false">auxio_auto_stop_delay</string>
+    <string name="set_key_auto_start_delay" translatable="false">auxio_auto_start_delay</string>
+    <string name="set_key_crossfade_duration" translatable="false">auxio_crossfade_duration</string>
     <string name="set_key_replay_gain" translatable="false">auxio_replay_gain</string>
     <string name="set_key_pre_amp" translatable="false">auxio_pre_amp</string>
     <string name="set_key_pre_amp_with" translatable="false">auxio_pre_amp_with</string>
     <string name="set_key_pre_amp_without" translatable="false">auxio_pre_amp_without</string>
     <string name="set_key_effect_gain" translatable="false">auxio_effect_gain</string>
+    <string name="set_key_bass_boost" translatable="false">auxio_bass_boost</string>
     <string name="set_key_reverb_preset" translatable="false">auxio_reverb_preset</string>
+    <string name="set_key_equalizer_preset" translatable="false">auxio_equalizer_preset</string>
+    <string name="set_key_equalizer_auto_genre" translatable="false">auxio_equalizer_auto_genre</string>
 
     <string name="set_key_play_in_list_with" translatable="false">auxio_play_in_list_with</string>
     <string name="set_key_play_in_parent_with" translatable="false">auxio_play_in_parent_with</string>
@@ -164,6 +169,21 @@
         <item>@string/set_auto_stop_delay_60</item>
     </string-array>
 
+    <string-array name="entries_auto_start_delay">
+        <item>@string/set_auto_start_delay_off</item>
+        <item>@string/set_auto_start_delay_5</item>
+        <item>@string/set_auto_start_delay_15</item>
+        <item>@string/set_auto_start_delay_30</item>
+    </string-array>
+
+    <string-array name="entries_crossfade_duration">
+        <item>@string/set_crossfade_off</item>
+        <item>@string/set_crossfade_2s</item>
+        <item>@string/set_crossfade_4s</item>
+        <item>@string/set_crossfade_6s</item>
+        <item>@string/set_crossfade_8s</item>
+    </string-array>
+
     <integer-array name="values_replay_gain">
         <item>@integer/replay_gain_off</item>
         <item>@integer/replay_gain_track</item>
@@ -178,6 +198,21 @@
         <item>@integer/auto_stop_delay_60m</item>
     </integer-array>
 
+    <integer-array name="values_auto_start_delay">
+        <item>@integer/auto_start_delay_off</item>
+        <item>@integer/auto_start_delay_5m</item>
+        <item>@integer/auto_start_delay_15m</item>
+        <item>@integer/auto_start_delay_30m</item>
+    </integer-array>
+
+    <integer-array name="values_crossfade_duration">
+        <item>@integer/crossfade_off</item>
+        <item>@integer/crossfade_2s</item>
+        <item>@integer/crossfade_4s</item>
+        <item>@integer/crossfade_6s</item>
+        <item>@integer/crossfade_8s</item>
+    </integer-array>
+
     <string-array name="entries_effect_gain">
         <item>@string/set_effect_gain_off</item>
         <item>@string/set_effect_gain_3db</item>
@@ -185,11 +220,43 @@
         <item>@string/set_effect_gain_9db</item>
     </string-array>
 
+    <string-array name="entries_bass_boost">
+        <item>@string/set_bass_boost_off</item>
+        <item>@string/set_bass_boost_25</item>
+        <item>@string/set_bass_boost_50</item>
+        <item>@string/set_bass_boost_75</item>
+        <item>@string/set_bass_boost_100</item>
+    </string-array>
+
+    <string-array name="entries_equalizer_preset">
+        <item>@string/set_equalizer_preset_off</item>
+        <item>@string/set_equalizer_preset_flat</item>
+        <item>@string/set_equalizer_preset_bass_boost</item>
+        <item>@string/set_equalizer_preset_treble_boost</item>
+        <item>@string/set_equalizer_preset_vocal</item>
+    </string-array>
+
     <integer-array name="values_effect_gain">
         <item>@integer/effect_gain_off</item>
         <item>@integer/effect_gain_3db</item>
         <item>@integer/effect_gain_6db</item>
         <item>@integer/effect_gain_9db</item>
+    </integer-array>
+
+    <integer-array name="values_bass_boost">
+        <item>@integer/bass_boost_off</item>
+        <item>@integer/bass_boost_25</item>
+        <item>@integer/bass_boost_50</item>
+        <item>@integer/bass_boost_75</item>
+        <item>@integer/bass_boost_100</item>
+    </integer-array>
+
+    <integer-array name="values_equalizer_preset">
+        <item>@integer/equalizer_preset_off</item>
+        <item>@integer/equalizer_preset_flat</item>
+        <item>@integer/equalizer_preset_bass_boost</item>
+        <item>@integer/equalizer_preset_treble_boost</item>
+        <item>@integer/equalizer_preset_vocal</item>
     </integer-array>
 
     <string-array name="entries_reverb_preset">
@@ -233,10 +300,33 @@
     <integer name="auto_stop_delay_30m">30</integer>
     <integer name="auto_stop_delay_60m">60</integer>
 
+    <integer name="auto_start_delay_off">0</integer>
+    <integer name="auto_start_delay_5m">5</integer>
+    <integer name="auto_start_delay_15m">15</integer>
+    <integer name="auto_start_delay_30m">30</integer>
+
+    <integer name="crossfade_off">0</integer>
+    <integer name="crossfade_2s">2000</integer>
+    <integer name="crossfade_4s">4000</integer>
+    <integer name="crossfade_6s">6000</integer>
+    <integer name="crossfade_8s">8000</integer>
+
     <integer name="effect_gain_off">0</integer>
     <integer name="effect_gain_3db">300</integer>
     <integer name="effect_gain_6db">600</integer>
     <integer name="effect_gain_9db">900</integer>
+
+    <integer name="bass_boost_off">0</integer>
+    <integer name="bass_boost_25">250</integer>
+    <integer name="bass_boost_50">500</integer>
+    <integer name="bass_boost_75">750</integer>
+    <integer name="bass_boost_100">1000</integer>
+
+    <integer name="equalizer_preset_off">0</integer>
+    <integer name="equalizer_preset_flat">1</integer>
+    <integer name="equalizer_preset_bass_boost">2</integer>
+    <integer name="equalizer_preset_treble_boost">3</integer>
+    <integer name="equalizer_preset_vocal">4</integer>
 
     <integer name="reverb_off">0</integer>
     <integer name="reverb_small_room">1</integer>

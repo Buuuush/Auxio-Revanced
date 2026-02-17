@@ -19,6 +19,7 @@
 package org.oxycblt.musikr.metadata
 
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import org.oxycblt.musikr.fs.File
 
 internal object TagLibJNI {
@@ -38,5 +39,34 @@ internal object TagLibJNI {
         return tag
     }
 
+    fun write(deviceFile: File, fis: FileInputStream, fos: FileOutputStream, edit: TagEditPayload):
+        TagWriteResult {
+        val inputStream = NativeInputStream(deviceFile, fis, fos)
+        val result =
+            writeNative(
+                inputStream,
+                edit.artist,
+                edit.album,
+                edit.albumArtist,
+                edit.genre,
+                edit.date,
+                edit.track ?: -1,
+                edit.disc ?: -1,
+            )
+        inputStream.close()
+        return result
+    }
+
     private external fun openNative(inputStream: NativeInputStream): MetadataResult
+
+    private external fun writeNative(
+        inputStream: NativeInputStream,
+        artist: String?,
+        album: String?,
+        albumArtist: String?,
+        genre: String?,
+        date: String?,
+        track: Int,
+        disc: Int,
+    ): TagWriteResult
 }

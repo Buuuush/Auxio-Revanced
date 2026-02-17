@@ -1,111 +1,114 @@
-Lecture & lecteur
+🔹 Haute priorité (à implémenter rapidement) – améliore directement l’expérience utilisateur et corrige des manques essentiels.
 
-Lecture programmée – démarrer la lecture à une heure précise.
+🔹 Moyenne priorité (ajouts intéressants) – fonctionnalités appréciées mais pas critiques.
 
-Minuterie d’arrêt – arrêter la lecture après un temps défini.
+🔹 🔹 Longue priorité (fun/avancées) – fonctionnalités avancées ou “bonus” qui enrichissent l’app mais ne sont pas indispensables au lancement.
 
-Crossfade avancé – fondu entre deux morceaux avec réglage de durée.
+🔹 Haute priorité
 
-Lecture accélérée/lente – changer la vitesse sans altérer la tonalité.
+Ajout onglet Dossier pour navigation directe.
 
-Loop personnalisé – répéter une section précise d’un morceau.
+Favoris – playlist automatique des morceaux marqués.
 
-Lecture intelligente – prioriser morceaux peu joués ou récemment ajoutés.
+Ajoutés récemment – détecter morceaux ajoutés la semaine passée.
 
-Mode veille – couper la lecture quand l’écran se verrouille.
+Joués récemment – historique lecture semaine passée.
 
-Écran verrouillé personnalisé – contrôles musicaux et cover sur lockscreen.
+Les plus joués – classement par compteur local.
 
-Contrôle gestuel – glisser pour changer de morceau ou régler le volume.
+Non joués – morceaux jamais lus.
 
-Lecture aléatoire intelligente – éviter répétitions immédiates et mixer genres.
+Recherche globale – titre, artiste, album, tag.
 
-2️⃣ Bibliothèque & gestion
+Historique complet – tous morceaux joués avec date/heure.
 
-Tri automatique – par artiste, album, genre, durée.
+Sauvegarde des paramètres – égaliseur, dernière position, préférences.
 
-Tagging automatique – compléter tags manquants via API musicale.
+Égaliseur multi-bande – avec presets basiques.
 
-Détection de doublons – identifier et fusionner fichiers identiques.
+Onglet Dossier : navigation hiérarchique type explorateur de fichiers permettant de parcourir l’arborescence du stockage.
+Affiche les dossiers et les fichiers audio du dossier courant avec icônes distinctes.
+Un clic sur un dossier permet d’y entrer, avec bouton retour pour remonter d’un niveau.
+Possibilité de lire tous les morceaux d’un dossier ou d’en ajouter le contenu à une playlist.
 
-Archivage automatique – déplacer morceaux non joués depuis longtemps.
+Effets audio basiques – réverbération, amplification.
 
-Recherche par paroles – si disponibles dans les tags ou via API.
+Tri automatique par artiste, album, genre.
 
-Mise à jour automatique – scanner régulièrement les dossiers pour nouveaux fichiers.
+Détection de doublons.
 
-Favoris multiples – sous-listes de favoris par genre ou humeur.
+Minuterie d’arrêt / Lecture programmée (pratique dès maintenant).
 
-Filtre par bitrate/format – choisir uniquement FLAC, MP3 320kbps, etc.
+🔹 Moyenne priorité
 
-Historique complet – voir tous les morceaux joués avec date/heure.
+Presets par genre – EQ automatique selon style musical.
 
-Tags personnalisés – ajouter tags personnalisés pour chaque fichier.
+Crossfade avancé.
 
-3️⃣ Playlists & organisation
+Amplification / Bass boost.
 
-Ajoutés récemment – morceaux ajoutés la dernière semaine.
+Gain normalisé.
 
-Joués récemment – historique de lecture de la semaine.
+Loop personnalisé.
 
-Les plus joués – classement local par compteur de lecture.
+Mode nuit automatique.
 
-Non joués – détecter morceaux jamais lus.
+Mode compact / mini-lecteur.
 
-Favoris – playlist automatique des morceaux marqués favoris.
+Widgets homescreen.
 
-Playlists temporaires – créer playlists pour une durée limitée.
+Notifications interactives.
 
-Playlist intelligente – génération automatique selon écoute récente.
+Archivage automatique des fichiers non joués.
 
-Export/Import playlist – sauvegarder ou charger playlists en .m3u ou .json.
+Tags personnalisés.
 
-Tri custom par utilisateur – trier playlists selon critères perso (genre, BPM…).
+Export/Import playlist (.m3u / .json).
 
-Recherche globale – par titre, artiste, album ou tag.
+Playlist intelligente (auto selon écoute récente).
 
-4️⃣ Égaliseur & effets audio
+Affichage paroles synchronisées (karaoké).
 
-Égaliseur multi-bande – plus de 5 bandes avec presets personnalisables.
+🔹🔹 Longue priorité
 
-Presets par genre – appliquer automatiquement un preset selon style musical.
+Lecture aléatoire intelligente.
 
-Effets audio avancés – réverbération, écho, spatialisation stéréo.
+Lecture accélérée/lente.
 
-Gain normalisé – égaliser le volume entre tous les morceaux.
+Contrôle gestuel.
 
-Amplification – booster le son sans saturation.
+Écran verrouillé personnalisé.
 
-Bass boost – augmenter les basses sur demande.
+Suround virtuel / spatialisation stéréo.
 
-Surround virtuel – simulation stéréo/3D sur casque.
+Compression audio.
 
-Compression audio – réduire l’écart entre sons faibles et forts.
+Visualiseur audio animé.
 
-5️⃣ Interface & expérience utilisateur
+Animations cover flow.
 
-Thèmes personnalisés – couleurs et polices modifiables.
+Thèmes personnalisés (couleurs, polices).
 
-Mode nuit automatique – sombre selon l’heure ou luminosité.
+Historique récent des dossiers ouverts.
 
-Animations cover flow – défilement fluide des pochettes.
+Minuterie d’arrêt avancée (arrêter après X morceaux).
 
-Mode compact / mini-lecteur – lecture flottante au-dessus d’autres apps.
+Loop avancé (répéter séquence avec fade).
 
-Widgets homescreen – contrôle de lecture sur l’écran d’accueil.
+Export configuration complète (paramètres + playlists).
 
-Notifications interactives – play/pause, suivant, précédent depuis barre de notif.
+Préférences par genre pour effets audio.
 
-Affichage paroles synchronisées – style karaoké.
+Mode veille pour écran verrouillé.
 
-Affichage visualiseur – animation selon fréquence et amplitude audio.
+Raccourcis clavier (PC / Android TV).
 
-Raccourcis clavier – commandes pour PC ou Android TV.
+Mode karaoké avancé avec réglage vitesse paroles.
 
-Historique récent des dossiers ouverts – revenir rapidement aux dossiers utilisés.
+Playlist temporaire (durée limitée).
 
-6️⃣ Sauvegarde & export
+Détection automatique de tags manquants via API.
 
-Sauvegarde paramètres – égaliseur, préférences, dernière position.
+Archivage avancé avec suggestions.
 
-Export de playlist et configuration – restaurer sur un autre appareil ou après réinstallation.
+Lecture programmée avancée (scénarios, ex: réveil musical).

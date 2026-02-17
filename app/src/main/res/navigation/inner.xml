@@ -516,6 +516,9 @@
         <argument
             android:name="parcel"
             app:argType="org.oxycblt.auxio.list.menu.Menu$ForSong$Parcel" />
+        <action
+            android:id="@+id/edit_tags"
+            app:destination="@id/edit_tags_dialog" />
     </dialog>
 
     <dialog
@@ -566,6 +569,19 @@
         <argument
             android:name="parcel"
             app:argType="org.oxycblt.auxio.list.menu.Menu$ForSelection$Parcel" />
+        <action
+            android:id="@+id/edit_tags"
+            app:destination="@id/edit_tags_dialog" />
+    </dialog>
+
+    <dialog
+        android:id="@+id/edit_tags_dialog"
+        android:name="org.oxycblt.auxio.music.decision.EditTagsDialog"
+        android:label="edit_tags_dialog"
+        tools:layout="@layout/dialog_playlist_name">
+        <argument
+            android:name="songUids"
+            app:argType="org.oxycblt.musikr.Music$UID[]" />
     </dialog>
 
     <dialog

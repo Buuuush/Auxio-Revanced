@@ -20,30 +20,132 @@ package org.oxycblt.musikr.metadata
 
 import android.util.Log
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
 import org.oxycblt.musikr.fs.File
 
-internal class NativeInputStream(private val deviceFile: File, fis: FileInputStream) {
-    private val channel = fis.channel
+internal class NativeInputStream(
+    private val deviceFile: File,
+    fis: FileInputStream,
+    fos: FileOutputStream? = null,
+) {
+    private val readChannel = fis.channel
+    private val writeChannel = fos?.channel
+    private var position = 0L
 
     fun name() = requireNotNull(deviceFile.path.name)
 
     fun readBlock(buf: ByteBuffer): Int {
         try {
-            return channel.read(buf)
+            val read = readChannel.read(buf, position)
+            if (read > 0) {
+                position += read
+            }
+            return read
         } catch (e: Exception) {
             Log.d("NativeInputStream", "Error reading block", e)
             return -2
         }
     }
 
+    fun writeBlock(buf: ByteBuffer): Int {
+        try {
+            val channel = writeChannel ?: return -2
+            val wrote = channel.write(buf, position)
+            if (wrote > 0) {
+                position += wrote
+            }
+            return wrote
+        } catch (e: Exception) {
+            Log.d("NativeInputStream", "Error writing block", e)
+            return -2
+        }
+    }
+
+    fun insert(buf: ByteBuffer, start: Long, replace: Long): Boolean {
+        try {
+            val channel = writeChannel ?: return false
+            if (start < 0 || replace < 0) {
+                return false
+            }
+            val fileLength = length()
+            if (start > fileLength) {
+                return false
+            }
+            val replaceClamped = minOf(replace, fileLength - start)
+            val insertSize = buf.remaining().toLong()
+            val delta = insertSize - replaceClamped
+            val tailStart = start + replaceClamped
+
+            if (delta > 0) {
+                shiftRight(readChannel, channel, tailStart, fileLength, delta)
+            } else if (delta < 0) {
+                shiftLeft(readChannel, channel, tailStart, fileLength, -delta)
+                channel.truncate(fileLength + delta)
+            }
+
+            channel.write(buf, start)
+            position = start + insertSize
+            return true
+        } catch (e: Exception) {
+            Log.d("NativeInputStream", "Error inserting block", e)
+            return false
+        }
+    }
+
+    fun removeBlock(start: Long, length: Long): Boolean {
+        try {
+            val channel = writeChannel ?: return false
+            if (start < 0 || length < 0) {
+                return false
+            }
+            val fileLength = this.length()
+            if (start > fileLength) {
+                return false
+            }
+            val removeLength = minOf(length, fileLength - start)
+            val tailStart = start + removeLength
+            shiftLeft(readChannel, channel, tailStart, fileLength, removeLength)
+            channel.truncate(fileLength - removeLength)
+            if (position > fileLength - removeLength) {
+                position = fileLength - removeLength
+            }
+            return true
+        } catch (e: Exception) {
+            Log.d("NativeInputStream", "Error removing block", e)
+            return false
+        }
+    }
+
+    fun truncate(length: Long): Boolean {
+        return try {
+            val channel = writeChannel ?: return false
+            channel.truncate(length)
+            if (position > length) {
+                position = length
+            }
+            true
+        } catch (e: Exception) {
+            Log.d("NativeInputStream", "Error truncating", e)
+            false
+        }
+    }
+
+    fun isReadOnly(): Boolean {
+        return writeChannel == null
+    }
+
     fun isOpen(): Boolean {
-        return channel.isOpen
+        return readChannel.isOpen
     }
 
     fun seekFromBeginning(offset: Long): Boolean {
         try {
-            channel.position(offset)
+            if (offset < 0) {
+                return false
+            }
+            position = offset
             return true
         } catch (e: Exception) {
             Log.d("NativeInputStream", "Error seeking from beginning", e)
@@ -53,7 +155,11 @@ internal class NativeInputStream(private val deviceFile: File, fis: FileInputStr
 
     fun seekFromCurrent(offset: Long): Boolean {
         try {
-            channel.position(channel.position() + offset)
+            val next = position + offset
+            if (next < 0) {
+                return false
+            }
+            position = next
             return true
         } catch (e: Exception) {
             Log.d("NativeInputStream", "Error seeking from current", e)
@@ -63,7 +169,11 @@ internal class NativeInputStream(private val deviceFile: File, fis: FileInputStr
 
     fun seekFromEnd(offset: Long): Boolean {
         try {
-            channel.position(channel.size() + offset)
+            val next = readChannel.size() + offset
+            if (next < 0) {
+                return false
+            }
+            position = next
             return true
         } catch (e: Exception) {
             Log.d("NativeInputStream", "Error seeking from end", e)
@@ -73,7 +183,7 @@ internal class NativeInputStream(private val deviceFile: File, fis: FileInputStr
 
     fun tell() =
         try {
-            channel.position()
+            position
         } catch (e: Exception) {
             Log.d("NativeInputStream", "Error getting position", e)
             Long.MIN_VALUE
@@ -81,13 +191,57 @@ internal class NativeInputStream(private val deviceFile: File, fis: FileInputStr
 
     fun length() =
         try {
-            channel.size()
+            readChannel.size()
         } catch (e: Exception) {
             Log.d("NativeInputStream", "Error getting length", e)
             Long.MIN_VALUE
         }
 
     fun close() {
-        channel.close()
+        readChannel.close()
+        writeChannel?.close()
+    }
+
+    private fun shiftRight(
+        source: FileChannel,
+        sink: FileChannel,
+        start: Long,
+        end: Long,
+        delta: Long,
+    ) {
+        val scratch = ByteArray(CHUNK_SIZE)
+        var cursor = end
+        while (cursor > start) {
+            val amount = minOf(CHUNK_SIZE.toLong(), cursor - start).toInt()
+            val readPos = cursor - amount
+            val wrapped = ByteBuffer.wrap(scratch, 0, amount)
+            source.read(wrapped, readPos)
+            wrapped.flip()
+            sink.write(wrapped, readPos + delta)
+            cursor = readPos
+        }
+    }
+
+    private fun shiftLeft(
+        source: FileChannel,
+        sink: FileChannel,
+        start: Long,
+        end: Long,
+        delta: Long,
+    ) {
+        val scratch = ByteArray(CHUNK_SIZE)
+        var cursor = start
+        while (cursor < end) {
+            val amount = minOf(CHUNK_SIZE.toLong(), end - cursor).toInt()
+            val wrapped = ByteBuffer.wrap(scratch, 0, amount)
+            source.read(wrapped, cursor)
+            wrapped.flip()
+            sink.write(wrapped, cursor - delta)
+            cursor += amount
+        }
+    }
+
+    private companion object {
+        const val CHUNK_SIZE = 8192
     }
 }

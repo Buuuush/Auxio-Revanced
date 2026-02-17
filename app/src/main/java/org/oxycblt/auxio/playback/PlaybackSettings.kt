@@ -41,12 +41,20 @@ interface PlaybackSettings : Settings<PlaybackSettings.Listener> {
     val headsetAutoplay: Boolean
     /** Delay in minutes before auto-stopping while paused. 0 disables auto-stop. */
     val autoStopDelayMinutes: Int
+    /** Delay in minutes before auto-resuming playback while paused. 0 disables scheduling. */
+    val autoStartDelayMinutes: Int
+    /** Duration of crossfade transition in milliseconds. 0 disables crossfade. */
+    val crossfadeDurationMs: Int
     /** The current ReplayGain configuration. */
     val replayGainMode: ReplayGainMode
     /** The current ReplayGain pre-amp configuration. */
     var replayGainPreAmp: ReplayGainPreAmp
     /** Additional amplification in millibels applied to the active audio session. */
     val effectGainMb: Int
+    /** Equalizer preset ID applied to the active audio session. 0 disables equalizer. */
+    val equalizerPreset: Int
+    /** Whether equalizer preset should be automatically selected from current song genre. */
+    val equalizerAutoGenre: Boolean
     /** Reverb preset ID applied to the active audio session. 0 disables reverb. */
     val reverbPreset: Int
     /** How to play a song from a general list of songs, specified by [PlaySong] */
@@ -118,6 +126,16 @@ class PlaybackSettingsImpl @Inject constructor(@ApplicationContext context: Cont
                 30,
             )
 
+    override val autoStartDelayMinutes: Int
+        get() =
+            sharedPreferences.getInt(
+                getString(R.string.set_key_auto_start_delay),
+                0,
+            )
+
+    override val crossfadeDurationMs: Int
+        get() = sharedPreferences.getInt(getString(R.string.set_key_crossfade_duration), 0)
+
     override val replayGainMode: ReplayGainMode
         get() =
             ReplayGainMode.fromIntCode(
@@ -140,6 +158,12 @@ class PlaybackSettingsImpl @Inject constructor(@ApplicationContext context: Cont
 
     override val effectGainMb: Int
         get() = sharedPreferences.getInt(getString(R.string.set_key_effect_gain), 0)
+
+    override val equalizerPreset: Int
+        get() = sharedPreferences.getInt(getString(R.string.set_key_equalizer_preset), 0)
+
+    override val equalizerAutoGenre: Boolean
+        get() = sharedPreferences.getBoolean(getString(R.string.set_key_equalizer_auto_genre), false)
 
     override val reverbPreset: Int
         get() = sharedPreferences.getInt(getString(R.string.set_key_reverb_preset), 0)
@@ -224,6 +248,9 @@ class PlaybackSettingsImpl @Inject constructor(@ApplicationContext context: Cont
                 listener.onPauseOnRepeatChanged()
             }
             getString(R.string.set_key_effect_gain),
+            getString(R.string.set_key_crossfade_duration),
+            getString(R.string.set_key_equalizer_preset),
+            getString(R.string.set_key_equalizer_auto_genre),
             getString(R.string.set_key_reverb_preset) -> {
                 L.d("Dispatching advanced effects setting change")
                 listener.onAdvancedEffectsChanged()

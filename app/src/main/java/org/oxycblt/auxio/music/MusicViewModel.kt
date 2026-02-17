@@ -37,6 +37,7 @@ import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
 import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.Playlist
+import org.oxycblt.musikr.Music
 import org.oxycblt.musikr.Song
 import org.oxycblt.musikr.playlist.ExportConfig
 import org.oxycblt.musikr.playlist.ExternalPlaylistManager
@@ -367,6 +368,8 @@ constructor(
                 ?: return false
         return likedPlaylist.songs.any { it.uid == song.uid }
     }
+
+    fun findSong(uid: Music.UID): Song? = musicRepository.find(uid) as? Song
 
     fun addToLikedSongs(song: Song) {
         viewModelScope.launch(Dispatchers.IO) {

@@ -23,6 +23,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
+import org.oxycblt.musikr.tag.Name
 
 class SmartPlaylistManager @Inject constructor(
     private val musicRepository: MusicRepository,
@@ -36,6 +37,7 @@ class SmartPlaylistManager @Inject constructor(
             val nowMs = System.currentTimeMillis()
             val weekAgoMs = nowMs - ONE_WEEK_MS
             val stats = playStatsRepository.readStats()
+            val history = playStatsRepository.readHistory()
 
             val favorites =
                 library.findPlaylistByName(FAVORITES_PLAYLIST_NAME)?.songs ?: emptyList()
@@ -70,12 +72,47 @@ class SmartPlaylistManager @Inject constructor(
                     .filter { (stats[it.uid.toString()]?.playCount ?: 0) <= 0 }
                     .sortedBy { it.name.raw.lowercase() }
 
+            val fullHistory =
+                history
+                    .asReversed()
+                    .mapNotNull { entry -> library.findSongByUidString(entry.songUid) }
+
+            val duplicates =
+                library.songs
+                    .groupBy { song ->
+                        buildString {
+                            append(song.name.raw.trim().lowercase())
+                            append('|')
+                            append(
+                                song.artists.joinToString(";") {
+                                    when (val artistName = it.name) {
+                                        is Name.Known -> artistName.raw.trim().lowercase()
+                                        is Name.Unknown -> artistName.placeholder.name.lowercase()
+                                    }
+                                }
+                            )
+                            append('|')
+                            append(song.durationMs / 1000)
+                        }
+                    }
+                    .values
+                    .filter { it.size > 1 }
+                    .flatten()
+                    .sortedBy { it.name.raw.lowercase() }
+
             upsertPlaylist(FAVORITES_PLAYLIST_NAME, favorites)
             upsertPlaylist(RECENTLY_ADDED_PLAYLIST_NAME, recentlyAdded)
             upsertPlaylist(RECENTLY_PLAYED_PLAYLIST_NAME, recentlyPlayed)
             upsertPlaylist(MOST_PLAYED_PLAYLIST_NAME, mostPlayed)
             upsertPlaylist(NEVER_PLAYED_PLAYLIST_NAME, neverPlayed)
+            upsertPlaylist(FULL_HISTORY_PLAYLIST_NAME, fullHistory)
+            upsertPlaylist(DUPLICATES_PLAYLIST_NAME, duplicates)
         }
+    }
+
+    private fun org.oxycblt.musikr.Library.findSongByUidString(uidString: String): Song? {
+        val uid = org.oxycblt.musikr.Music.UID.fromString(uidString) ?: return null
+        return songs.firstOrNull { it.uid == uid }
     }
 
     private suspend fun upsertPlaylist(name: String, songs: List<Song>) {
@@ -107,6 +144,8 @@ class SmartPlaylistManager @Inject constructor(
         const val RECENTLY_PLAYED_PLAYLIST_NAME = "Joués récemment"
         const val MOST_PLAYED_PLAYLIST_NAME = "Les plus joués"
         const val NEVER_PLAYED_PLAYLIST_NAME = "Non joués"
+        const val FULL_HISTORY_PLAYLIST_NAME = "Historique complet"
+        const val DUPLICATES_PLAYLIST_NAME = "Doublons"
 
         private const val ONE_WEEK_MS = 7L * 24L * 60L * 60L * 1000L
     }

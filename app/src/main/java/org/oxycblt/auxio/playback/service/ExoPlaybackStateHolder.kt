@@ -21,6 +21,7 @@ package org.oxycblt.auxio.playback.service
 import android.content.Context
 import android.content.Intent
 import android.media.audiofx.AudioEffect
+import android.media.audiofx.Equalizer
 import android.media.audiofx.LoudnessEnhancer
 import android.media.audiofx.PresetReverb
 import android.provider.OpenableColumns
@@ -45,10 +46,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.oxycblt.auxio.image.ImageSettings
+import org.oxycblt.auxio.music.resolve
 import org.oxycblt.auxio.music.MusicRepository
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.playback.persist.PersistenceRepository
@@ -86,9 +89,13 @@ class ExoPlaybackStateHolder(
     private val saveJob = Job()
     private val saveScope = CoroutineScope(Dispatchers.IO + saveJob)
     private val restoreScope = CoroutineScope(Dispatchers.IO + saveJob)
+    private val crossfadeScope = CoroutineScope(Dispatchers.Main + saveJob)
     private var currentSaveJob: Job? = null
+    private var crossfadeJob: Job? = null
+    private var pendingCrossfadeFadeIn = false
     private var openAudioEffectSession = false
     private var loudnessEnhancer: LoudnessEnhancer? = null
+    private var equalizer: Equalizer? = null
     private var presetReverb: PresetReverb? = null
 
     var sessionOngoing = false
@@ -101,6 +108,7 @@ class ExoPlaybackStateHolder(
         replayGainProcessor.attach()
         playbackSettings.registerListener(this)
         imageSettings.registerListener(this)
+        restartCrossfadeMonitor()
     }
 
     fun release() {
@@ -109,6 +117,8 @@ class ExoPlaybackStateHolder(
         musicRepository.removeUpdateListener(this)
         player.removeListener(this)
         replayGainProcessor.release()
+        crossfadeJob?.cancel()
+        player.volume = 1f
         releaseAdvancedEffects()
         imageSettings.unregisterListener(this)
         playbackSettings.unregisterListener(this)
@@ -470,6 +480,7 @@ class ExoPlaybackStateHolder(
 
     override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
         super.onPlayWhenReadyChanged(playWhenReady, reason)
+        restartCrossfadeMonitor()
 
         if (player.playWhenReady) {
             // Mark that we have started playing so that the notification can now be posted.
@@ -506,6 +517,10 @@ class ExoPlaybackStateHolder(
 
         if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
             playbackManager.ack(this, StateAck.IndexMoved)
+        }
+        pendingCrossfadeFadeIn = reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
+        if (openAudioEffectSession && playbackSettings.equalizerAutoGenre) {
+            updateAdvancedEffects()
         }
     }
 
@@ -564,9 +579,59 @@ class ExoPlaybackStateHolder(
 
     override fun onAdvancedEffectsChanged() {
         super.onAdvancedEffectsChanged()
+        restartCrossfadeMonitor()
         if (openAudioEffectSession) {
             updateAdvancedEffects()
         }
+    }
+
+    private fun restartCrossfadeMonitor() {
+        crossfadeJob?.cancel()
+
+        val crossfadeMs = playbackSettings.crossfadeDurationMs
+        if (crossfadeMs <= 0) {
+            pendingCrossfadeFadeIn = false
+            player.volume = 1f
+            return
+        }
+
+        crossfadeJob =
+            crossfadeScope.launch {
+                while (isActive) {
+                    applyCrossfade(crossfadeMs)
+                    delay(CROSSFADE_MONITOR_DELAY_MS)
+                }
+            }
+    }
+
+    private fun applyCrossfade(crossfadeMs: Int) {
+        if (!player.playWhenReady || !player.isPlaying) {
+            player.volume = 1f
+            return
+        }
+
+        var volume = 1f
+        val fadeWindow = crossfadeMs.toLong()
+        val position = player.currentPosition.coerceAtLeast(0L)
+
+        if (pendingCrossfadeFadeIn) {
+            val fadeInVolume = (position.coerceAtMost(fadeWindow).toFloat() / fadeWindow)
+            volume = minOf(volume, fadeInVolume)
+            if (position >= fadeWindow) {
+                pendingCrossfadeFadeIn = false
+            }
+        }
+
+        val duration = player.duration
+        if (duration > 0 && player.hasNextMediaItem()) {
+            val remaining = (duration - position).coerceAtLeast(0L)
+            if (remaining <= fadeWindow) {
+                val fadeOutVolume = remaining.toFloat() / fadeWindow
+                volume = minOf(volume, fadeOutVolume)
+            }
+        }
+
+        player.volume = volume.coerceIn(0f, 1f)
     }
 
     private fun updatePauseOnRepeat() {
@@ -577,6 +642,8 @@ class ExoPlaybackStateHolder(
     private fun releaseAdvancedEffects() {
         loudnessEnhancer?.release()
         loudnessEnhancer = null
+        equalizer?.release()
+        equalizer = null
         presetReverb?.release()
         presetReverb = null
     }
@@ -599,6 +666,30 @@ class ExoPlaybackStateHolder(
                     }
             }
 
+            val equalizerPreset = resolveEqualizerPreset()
+            if (equalizerPreset > 0) {
+                equalizer =
+                    Equalizer(0, sessionId).apply {
+                        val levels =
+                            when (equalizerPreset) {
+                                1 -> intArrayOf(0, 0, 0, 0, 0)
+                                2 -> intArrayOf(600, 400, 100, -200, -300)
+                                3 -> intArrayOf(-300, -200, 100, 400, 600)
+                                4 -> intArrayOf(-200, 100, 500, 300, -100)
+                                else -> intArrayOf(0, 0, 0, 0, 0)
+                            }
+                        val range = bandLevelRange
+                        val minLevel = range[0].toInt()
+                        val maxLevel = range[1].toInt()
+                        for (band in 0 until numberOfBands.toInt()) {
+                            val requested = levels.getOrElse(band) { 0 }
+                            val clamped = requested.coerceIn(minLevel, maxLevel)
+                            setBandLevel(band.toShort(), clamped.toShort())
+                        }
+                        enabled = true
+                    }
+            }
+
             val reverbPreset = playbackSettings.reverbPreset.toShort()
             if (reverbPreset > 0) {
                 presetReverb =
@@ -610,6 +701,38 @@ class ExoPlaybackStateHolder(
         } catch (exception: Throwable) {
             L.w(exception, "Unable to apply advanced effects")
             releaseAdvancedEffects()
+        }
+    }
+
+    private fun resolveEqualizerPreset(): Int {
+        if (!playbackSettings.equalizerAutoGenre) {
+            return playbackSettings.equalizerPreset
+        }
+        val song = player.currentMediaItem?.song ?: return playbackSettings.equalizerPreset
+        val genre = song.genres.firstOrNull()?.name?.resolve(context)?.lowercase() ?: return playbackSettings.equalizerPreset
+
+        return when {
+            genre.contains("hip hop") ||
+                genre.contains("rap") ||
+                genre.contains("edm") ||
+                genre.contains("electro") ||
+                genre.contains("electronic") ||
+                genre.contains("dance") ||
+                genre.contains("house") ||
+                genre.contains("techno") ||
+                genre.contains("dubstep") -> 2
+
+            genre.contains("rock") ||
+                genre.contains("metal") ||
+                genre.contains("punk") -> 3
+
+            genre.contains("jazz") ||
+                genre.contains("classical") ||
+                genre.contains("acoustic") ||
+                genre.contains("blues") ||
+                genre.contains("vocal") -> 4
+
+            else -> playbackSettings.equalizerPreset
         }
     }
 
@@ -754,5 +877,6 @@ class ExoPlaybackStateHolder(
 
     private companion object {
         const val SAVE_BUFFER = 5000L
+        const val CROSSFADE_MONITOR_DELAY_MS = 120L
     }
 }

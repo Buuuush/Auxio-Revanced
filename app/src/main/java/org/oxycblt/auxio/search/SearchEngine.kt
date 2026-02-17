@@ -72,7 +72,13 @@ class SearchEngineImpl @Inject constructor(@ApplicationContext private val conte
         return SearchEngine.Items(
             songs =
                 items.songs?.searchListImpl(query) { q, song ->
-                    song.path.name?.contains(q, ignoreCase = true) == true
+                    song.path.name?.contains(q, ignoreCase = true) == true ||
+                        song.artists.any { it.name.resolve(context).contains(q, ignoreCase = true) } ||
+                        song.album.name.resolve(context).contains(q, ignoreCase = true) ||
+                        song.genres.any { it.name.resolve(context).contains(q, ignoreCase = true) } ||
+                        song.date?.toString()?.contains(q, ignoreCase = true) == true ||
+                        song.track?.toString()?.contains(q, ignoreCase = true) == true ||
+                        song.disc?.number?.toString()?.contains(q, ignoreCase = true) == true
                 },
             albums = items.albums?.searchListImpl(query),
             artists = items.artists?.searchListImpl(query),

@@ -22,6 +22,7 @@
 #include "JClassRef.h"
 #include "JMetadataBuilder.h"
 #include "JObjectRef.h"
+#include "JStringRef.h"
 #include "util.h"
 
 #include "taglib/fileref.h"
@@ -30,6 +31,8 @@
 #include "taglib/mp4properties.h"
 #include "taglib/mpegfile.h"
 #include "taglib/opusfile.h"
+#include "taglib/tpropertymap.h"
+#include "taglib/tstringlist.h"
 #include "taglib/vorbisfile.h"
 #include "taglib/wavfile.h"
 
@@ -266,6 +269,60 @@ static jobject metadataResultProviderFailed(JNIEnv *env) {
             "org/oxycblt/musikr/metadata/MetadataResult$ProviderFailed");
 }
 
+static jobject tagWriteResultObject(JNIEnv *env, const char *classpath) {
+    JClassRef jObjectClass { env, classpath };
+    std::string signature = std::string("L") + classpath + ";";
+    jfieldID jInstanceField = env->GetStaticFieldID(*jObjectClass, "INSTANCE",
+            signature.c_str());
+    return env->GetStaticObjectField(*jObjectClass, jInstanceField);
+}
+
+static jobject tagWriteResultSuccess(JNIEnv *env) {
+    return tagWriteResultObject(env,
+            "org/oxycblt/musikr/metadata/TagWriteResult$Success");
+}
+
+static jobject tagWriteResultNotAudio(JNIEnv *env) {
+    return tagWriteResultObject(env,
+            "org/oxycblt/musikr/metadata/TagWriteResult$NotAudio");
+}
+
+static jobject tagWriteResultProviderFailed(JNIEnv *env) {
+    return tagWriteResultObject(env,
+            "org/oxycblt/musikr/metadata/TagWriteResult$ProviderFailed");
+}
+
+static jobject tagWriteResultUnsupported(JNIEnv *env) {
+    return tagWriteResultObject(env,
+            "org/oxycblt/musikr/metadata/TagWriteResult$Unsupported");
+}
+
+void replaceProperty(TagLib::PropertyMap &properties,
+        const char *key,
+        jobject value,
+        JNIEnv *env) {
+    if (value == nullptr) {
+        return;
+    }
+    JStringRef jValue { env, reinterpret_cast<jstring>(value) };
+    const char *raw = env->GetStringUTFChars(*jValue, nullptr);
+    TagLib::StringList list;
+    list.append(TagLib::String(raw, TagLib::String::UTF8));
+    properties.replace(key, list);
+    env->ReleaseStringUTFChars(*jValue, raw);
+}
+
+void replaceNumericProperty(TagLib::PropertyMap &properties,
+        const char *key,
+        jint value) {
+    if (value < 0) {
+        return;
+    }
+    TagLib::StringList list;
+    list.append(TagLib::String(std::to_string(value), TagLib::String::UTF8));
+    properties.replace(key, list);
+}
+
 extern "C" JNIEXPORT jobject JNICALL
 Java_org_oxycblt_musikr_metadata_TagLibJNI_openNative(JNIEnv *env,
         jobject /* this */,
@@ -319,5 +376,82 @@ Java_org_oxycblt_musikr_metadata_TagLibJNI_openNative(JNIEnv *env,
         LOGE("Unable to parse metadata in %s: %s", name.c_str(), e.what());
         delete overriddenFile;
         return metadataResultProviderFailed(env);
+    }
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_org_oxycblt_musikr_metadata_TagLibJNI_writeNative(JNIEnv *env,
+        jobject /* this */,
+        jobject inputStream,
+        jobject artist,
+        jobject album,
+        jobject albumArtist,
+        jobject genre,
+        jobject date,
+        jint track,
+        jint disc) {
+    std::string name = "unknown file";
+    TagLib::File *overriddenFile = nullptr;
+    try {
+        JInputStream jStream {env, inputStream};
+        name = jStream.name();
+        TagLib::FileRef fileRef {&jStream, false, TagLib::AudioProperties::Fast};
+        TagLib::File *fileToUse = fileRef.file();
+        if (fileToUse == nullptr) {
+            jStream.seek(0, TagLib::IOStream::Beginning);
+            overriddenFile = createFileFromContent(&jStream, false, TagLib::AudioProperties::Fast);
+            fileToUse = overriddenFile;
+        }
+        if (fileToUse == nullptr) {
+            delete overriddenFile;
+            return tagWriteResultNotAudio(env);
+        }
+
+        auto *tag = fileToUse->tag();
+        if (tag == nullptr) {
+            delete overriddenFile;
+            return tagWriteResultUnsupported(env);
+        }
+
+        if (artist != nullptr) {
+            JStringRef jArtist { env, reinterpret_cast<jstring>(artist) };
+            const char *raw = env->GetStringUTFChars(*jArtist, nullptr);
+            tag->setArtist(TagLib::String(raw, TagLib::String::UTF8));
+            env->ReleaseStringUTFChars(*jArtist, raw);
+        }
+        if (album != nullptr) {
+            JStringRef jAlbum { env, reinterpret_cast<jstring>(album) };
+            const char *raw = env->GetStringUTFChars(*jAlbum, nullptr);
+            tag->setAlbum(TagLib::String(raw, TagLib::String::UTF8));
+            env->ReleaseStringUTFChars(*jAlbum, raw);
+        }
+        if (genre != nullptr) {
+            JStringRef jGenre { env, reinterpret_cast<jstring>(genre) };
+            const char *raw = env->GetStringUTFChars(*jGenre, nullptr);
+            tag->setGenre(TagLib::String(raw, TagLib::String::UTF8));
+            env->ReleaseStringUTFChars(*jGenre, raw);
+        }
+        if (track >= 0) {
+            tag->setTrack(static_cast<unsigned int>(track));
+        }
+
+        TagLib::PropertyMap properties = fileToUse->properties();
+        replaceProperty(properties, "ALBUMARTIST", albumArtist, env);
+        replaceProperty(properties, "DATE", date, env);
+        replaceNumericProperty(properties, "DISCNUMBER", disc);
+        fileToUse->setProperties(properties);
+
+        if (!fileToUse->save()) {
+            LOGE("Unable to save updated metadata in %s", name.c_str());
+            delete overriddenFile;
+            return tagWriteResultProviderFailed(env);
+        }
+
+        delete overriddenFile;
+        return tagWriteResultSuccess(env);
+    } catch (std::exception &e) {
+        LOGE("Unable to write metadata in %s: %s", name.c_str(), e.what());
+        delete overriddenFile;
+        return tagWriteResultProviderFailed(env);
     }
 }

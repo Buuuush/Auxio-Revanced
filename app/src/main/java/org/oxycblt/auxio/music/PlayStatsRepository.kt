@@ -26,10 +26,14 @@ import org.oxycblt.musikr.Music
 
 data class PlayStat(val playCount: Int, val lastPlayedMs: Long)
 
+data class PlayHistoryEntry(val songUid: String, val playedAtMs: Long)
+
 interface PlayStatsRepository {
     fun recordPlayed(songUid: Music.UID)
 
     fun readStats(): Map<String, PlayStat>
+
+    fun readHistory(): List<PlayHistoryEntry>
 }
 
 class PlayStatsRepositoryImpl @Inject constructor(@ApplicationContext context: Context) :
@@ -38,19 +42,33 @@ class PlayStatsRepositoryImpl @Inject constructor(@ApplicationContext context: C
 
     override fun recordPlayed(songUid: Music.UID) {
         val key = songUid.toString()
+        val now = System.currentTimeMillis()
         val previous = readStats()[key]
         val updated =
             PlayStat(
                 playCount = (previous?.playCount ?: 0) + 1,
-                lastPlayedMs = System.currentTimeMillis(),
+                lastPlayedMs = now,
             )
         val all = readStats().toMutableMap().apply { put(key, updated) }
-        prefs.edit { putStringSet(KEY_STATS, encode(all)) }
+        val history = readHistory().toMutableList()
+        history.add(PlayHistoryEntry(key, now))
+        if (history.size > MAX_HISTORY_ENTRIES) {
+            history.subList(0, history.size - MAX_HISTORY_ENTRIES).clear()
+        }
+        prefs.edit {
+            putStringSet(KEY_STATS, encode(all))
+            putStringSet(KEY_HISTORY, encodeHistory(history))
+        }
     }
 
     override fun readStats(): Map<String, PlayStat> {
         val encoded = prefs.getStringSet(KEY_STATS, emptySet()) ?: emptySet()
         return decode(encoded)
+    }
+
+    override fun readHistory(): List<PlayHistoryEntry> {
+        val encoded = prefs.getStringSet(KEY_HISTORY, emptySet()) ?: emptySet()
+        return decodeHistory(encoded)
     }
 
     private fun encode(stats: Map<String, PlayStat>): Set<String> =
@@ -73,9 +91,30 @@ class PlayStatsRepositoryImpl @Inject constructor(@ApplicationContext context: C
         return out
     }
 
+    private fun encodeHistory(entries: List<PlayHistoryEntry>): Set<String> =
+        entries.mapTo(mutableSetOf()) { entry ->
+            listOf(entry.songUid, entry.playedAtMs.toString()).joinToString(SEP)
+        }
+
+    private fun decodeHistory(encoded: Set<String>): List<PlayHistoryEntry> {
+        val out = mutableListOf<PlayHistoryEntry>()
+        for (line in encoded) {
+            val parts = line.split(SEP)
+            if (parts.size != 2) {
+                continue
+            }
+            val uid = parts[0]
+            val playedAt = parts[1].toLongOrNull() ?: continue
+            out += PlayHistoryEntry(uid, playedAt)
+        }
+        return out.sortedBy { it.playedAtMs }
+    }
+
     private companion object {
         private const val PREFS_NAME = "auxio_play_stats"
         private const val KEY_STATS = "stats"
+        private const val KEY_HISTORY = "history"
         private const val SEP = "\u001F"
+        private const val MAX_HISTORY_ENTRIES = 5000
     }
 }

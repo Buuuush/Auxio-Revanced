@@ -118,6 +118,11 @@ private:
     jobject jInputStream;
     TagLib::String _name;
     jmethodID jInputStreamReadBlockMethod;
+    jmethodID jInputStreamWriteBlockMethod;
+    jmethodID jInputStreamInsertMethod;
+    jmethodID jInputStreamRemoveBlockMethod;
+    jmethodID jInputStreamTruncateMethod;
+    jmethodID jInputStreamIsReadOnlyMethod;
     jmethodID jInputStreamIsOpenMethod;
     jmethodID jInputStreamSeekFromBeginningMethod;
     jmethodID jInputStreamSeekFromCurrentMethod;

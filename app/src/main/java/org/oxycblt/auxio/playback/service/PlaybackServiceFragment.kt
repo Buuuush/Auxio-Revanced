@@ -85,6 +85,7 @@ private constructor(
     private val waitJob = Job()
     private val scope = CoroutineScope(Dispatchers.Main + waitJob)
     private var autoStopJob: Job? = null
+    private var autoStartJob: Job? = null
     private var lastRecordedSongUid: String? = null
     private val exoHolder = exoHolderFactory.create()
     private val sessionHolder = sessionHolderFactory.create(context, foregroundListener)
@@ -118,11 +119,39 @@ private constructor(
         autoStopJob = null
     }
 
+    private fun scheduleAutoStart() {
+        val delayMinutes = playbackSettings.autoStartDelayMinutes
+        if (delayMinutes <= 0 || playbackManager.currentSong == null) {
+            cancelAutoStart()
+            return
+        }
+        autoStartJob?.cancel()
+        autoStartJob =
+            scope.launch {
+                delay(delayMinutes * 60L * 1000L)
+                L.d("Scheduled playback timer expired after ${delayMinutes} minutes")
+                playbackManager.playing(true)
+            }
+    }
+
+    private fun cancelAutoStart() {
+        autoStartJob?.cancel()
+        autoStartJob = null
+    }
+
     private fun updateAutoStopTimer(isPlaying: Boolean) {
         if (isPlaying) {
             cancelAutoStop()
         } else if (exoHolder.sessionOngoing) {
             scheduleAutoStop()
+        }
+    }
+
+    private fun updateAutoStartTimer(isPlaying: Boolean) {
+        if (isPlaying) {
+            cancelAutoStart()
+        } else if (exoHolder.sessionOngoing) {
+            scheduleAutoStart()
         }
     }
 
@@ -135,6 +164,7 @@ private constructor(
         systemReceiver.attach()
         playbackManager.addListener(this)
         updateAutoStopTimer(playbackManager.progression.isPlaying)
+        updateAutoStartTimer(playbackManager.progression.isPlaying)
         return sessionHolder.token
     }
 
@@ -188,6 +218,7 @@ private constructor(
 
     fun release() {
         autoStopJob?.cancel()
+        autoStartJob?.cancel()
         waitJob.cancel()
         playbackManager.removeListener(this)
         systemReceiver.release()
@@ -203,6 +234,7 @@ private constructor(
         isShuffled: Boolean,
     ) {
         cancelAutoStop()
+        updateAutoStartTimer(playbackManager.progression.isPlaying)
         lastRecordedSongUid = null
         if (playbackManager.progression.isPlaying) {
             recordCurrentSongPlay()
@@ -218,12 +250,14 @@ private constructor(
     override fun onProgressionChanged(progression: Progression) {
         // Update timer whenever play/pause state changes
         updateAutoStopTimer(progression.isPlaying)
+        updateAutoStartTimer(progression.isPlaying)
         if (progression.isPlaying) {
             recordCurrentSongPlay()
         }
     }
 
     override fun onSessionEnded() {
+        cancelAutoStart()
         lastRecordedSongUid = null
         foregroundListener.updateForeground(ForegroundListener.Change.MEDIA_SESSION)
     }

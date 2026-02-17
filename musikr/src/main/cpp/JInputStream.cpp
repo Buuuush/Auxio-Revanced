@@ -35,6 +35,14 @@ JInputStream::JInputStream(JNIEnv *env, jobject jInputStream) : env(env), jInput
             "()Ljava/lang/String;");
     jInputStreamReadBlockMethod = jInputStreamClass.method("readBlock",
             "(Ljava/nio/ByteBuffer;)I");
+        jInputStreamWriteBlockMethod = jInputStreamClass.method("writeBlock",
+            "(Ljava/nio/ByteBuffer;)I");
+        jInputStreamInsertMethod = jInputStreamClass.method("insert",
+            "(Ljava/nio/ByteBuffer;JJ)Z");
+        jInputStreamRemoveBlockMethod = jInputStreamClass.method("removeBlock",
+            "(JJ)Z");
+        jInputStreamTruncateMethod = jInputStreamClass.method("truncate", "(J)Z");
+        jInputStreamIsReadOnlyMethod = jInputStreamClass.method("isReadOnly", "()Z");
     jInputStreamIsOpenMethod = jInputStreamClass.method("isOpen", "()Z");
     jInputStreamSeekFromBeginningMethod = jInputStreamClass.method(
             "seekFromBeginning", "(J)Z");
@@ -86,20 +94,48 @@ TagLib::ByteVector JInputStream::readBlock(size_t length) {
 }
 
 void JInputStream::writeBlock(const TagLib::ByteVector &data) {
-    throw std::runtime_error("Not implemented");
+    jobject wrappedByteBuffer = env->NewDirectByteBuffer(
+            const_cast<char*>(data.data()), data.size());
+    if (wrappedByteBuffer == nullptr) {
+        throw std::runtime_error("Failed to wrap ByteBuffer");
+    }
+    JObjectRef byteBuffer { env, wrappedByteBuffer };
+    jint wrote = env->CallIntMethod(jInputStream, jInputStreamWriteBlockMethod,
+            *byteBuffer);
+    if (wrote < 0) {
+        throw std::runtime_error("Failed to write block, see logs");
+    }
 }
 
 void JInputStream::insert(const TagLib::ByteVector &data,
         TagLib::offset_t start, size_t replace) {
-    throw std::runtime_error("Not implemented");
+    jobject wrappedByteBuffer = env->NewDirectByteBuffer(
+            const_cast<char*>(data.data()), data.size());
+    if (wrappedByteBuffer == nullptr) {
+        throw std::runtime_error("Failed to wrap ByteBuffer");
+    }
+    JObjectRef byteBuffer { env, wrappedByteBuffer };
+    auto jstart = static_cast<jlong>(std::llround(start));
+    auto jreplace = static_cast<jlong>(replace);
+    jboolean result = env->CallBooleanMethod(jInputStream, jInputStreamInsertMethod,
+            *byteBuffer, jstart, jreplace);
+    if (!result) {
+        throw std::runtime_error("Failed to insert block, see logs");
+    }
 }
 
 void JInputStream::removeBlock(TagLib::offset_t start, size_t length) {
-    throw std::runtime_error("Not implemented");
+    auto jstart = static_cast<jlong>(std::llround(start));
+    auto jlength = static_cast<jlong>(length);
+    jboolean result = env->CallBooleanMethod(jInputStream,
+            jInputStreamRemoveBlockMethod, jstart, jlength);
+    if (!result) {
+        throw std::runtime_error("Failed to remove block, see logs");
+    }
 }
 
 bool JInputStream::readOnly() const {
-    return true;
+    return env->CallBooleanMethod(jInputStream, jInputStreamIsReadOnlyMethod);
 }
 
 bool JInputStream::isOpen() const {
@@ -149,6 +185,11 @@ TagLib::offset_t JInputStream::length() {
 }
 
 void JInputStream::truncate(TagLib::offset_t length) {
-    throw std::runtime_error("Not implemented");
+    auto jlength = static_cast<jlong>(std::llround(length));
+    jboolean result = env->CallBooleanMethod(jInputStream,
+            jInputStreamTruncateMethod, jlength);
+    if (!result) {
+        throw std::runtime_error("Failed to truncate, see logs");
+    }
 }
 

@@ -13,6 +13,22 @@
         android:layout_height="match_parent"
         tools:listitem="@layout/item_song" />
 
+    <TextView
+        android:id="@+id/home_breadcrumb"
+        style="@style/Widget.Auxio.TextView.Item.Secondary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:background="?attr/colorSurface"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingStart="@dimen/spacing_medium"
+        android:paddingTop="@dimen/spacing_small"
+        android:paddingEnd="@dimen/spacing_medium"
+        android:paddingBottom="@dimen/spacing_small"
+        android:visibility="gone"
+        tools:text="Folders / Music / Album" />
+
 
     <org.oxycblt.auxio.ui.EdgeFrameLayout
         android:layout_width="match_parent"
