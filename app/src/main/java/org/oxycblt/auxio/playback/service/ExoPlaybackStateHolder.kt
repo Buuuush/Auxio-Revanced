@@ -21,6 +21,8 @@ package org.oxycblt.auxio.playback.service
 import android.content.Context
 import android.content.Intent
 import android.media.audiofx.AudioEffect
+import android.media.audiofx.LoudnessEnhancer
+import android.media.audiofx.PresetReverb
 import android.provider.OpenableColumns
 import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
@@ -86,6 +88,8 @@ class ExoPlaybackStateHolder(
     private val restoreScope = CoroutineScope(Dispatchers.IO + saveJob)
     private var currentSaveJob: Job? = null
     private var openAudioEffectSession = false
+    private var loudnessEnhancer: LoudnessEnhancer? = null
+    private var presetReverb: PresetReverb? = null
 
     var sessionOngoing = false
         private set
@@ -105,6 +109,7 @@ class ExoPlaybackStateHolder(
         musicRepository.removeUpdateListener(this)
         player.removeListener(this)
         replayGainProcessor.release()
+        releaseAdvancedEffects()
         imageSettings.unregisterListener(this)
         playbackSettings.unregisterListener(this)
         player.release()
@@ -476,12 +481,14 @@ class ExoPlaybackStateHolder(
                 L.d("Opening audio effect session")
                 broadcastAudioEffectAction(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION)
                 openAudioEffectSession = true
+                updateAdvancedEffects()
             }
         } else if (openAudioEffectSession) {
             // Make sure to close the audio session when we stop playback.
             L.d("Closing audio effect session")
             broadcastAudioEffectAction(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION)
             openAudioEffectSession = false
+            releaseAdvancedEffects()
         }
     }
 
@@ -555,9 +562,55 @@ class ExoPlaybackStateHolder(
         updatePauseOnRepeat()
     }
 
+    override fun onAdvancedEffectsChanged() {
+        super.onAdvancedEffectsChanged()
+        if (openAudioEffectSession) {
+            updateAdvancedEffects()
+        }
+    }
+
     private fun updatePauseOnRepeat() {
         player.pauseAtEndOfMediaItems =
             player.repeatMode == Player.REPEAT_MODE_ONE && playbackSettings.pauseOnRepeat
+    }
+
+    private fun releaseAdvancedEffects() {
+        loudnessEnhancer?.release()
+        loudnessEnhancer = null
+        presetReverb?.release()
+        presetReverb = null
+    }
+
+    private fun updateAdvancedEffects() {
+        releaseAdvancedEffects()
+
+        val sessionId = audioSessionId
+        if (sessionId <= 0) {
+            return
+        }
+
+        try {
+            val gainMb = playbackSettings.effectGainMb
+            if (gainMb > 0) {
+                loudnessEnhancer =
+                    LoudnessEnhancer(sessionId).apply {
+                        setTargetGain(gainMb)
+                        enabled = true
+                    }
+            }
+
+            val reverbPreset = playbackSettings.reverbPreset.toShort()
+            if (reverbPreset > 0) {
+                presetReverb =
+                    PresetReverb(0, sessionId).apply {
+                        preset = reverbPreset
+                        enabled = true
+                    }
+            }
+        } catch (exception: Throwable) {
+            L.w(exception, "Unable to apply advanced effects")
+            releaseAdvancedEffects()
+        }
     }
 
     private fun save(cb: () -> Unit) {

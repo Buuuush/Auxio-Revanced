@@ -34,6 +34,8 @@
     <string name="set_key_pre_amp" translatable="false">auxio_pre_amp</string>
     <string name="set_key_pre_amp_with" translatable="false">auxio_pre_amp_with</string>
     <string name="set_key_pre_amp_without" translatable="false">auxio_pre_amp_without</string>
+    <string name="set_key_effect_gain" translatable="false">auxio_effect_gain</string>
+    <string name="set_key_reverb_preset" translatable="false">auxio_reverb_preset</string>
 
     <string name="set_key_play_in_list_with" translatable="false">auxio_play_in_list_with</string>
     <string name="set_key_play_in_parent_with" translatable="false">auxio_play_in_parent_with</string>
@@ -64,6 +66,9 @@
     <string name="set_key_library_revision" translatable="false">auxio_library_revision</string>
 
     <string name="set_key_force_reload_workaround" translatable="false">auxio_force_reload</string>
+
+    <string name="set_key_export_settings" translatable="false">auxio_export_settings</string>
+    <string name="set_key_import_settings" translatable="false">auxio_import_settings</string>
 
     <string-array name="entries_theme">
         <item>@string/set_theme_auto</item>
@@ -173,6 +178,40 @@
         <item>@integer/auto_stop_delay_60m</item>
     </integer-array>
 
+    <string-array name="entries_effect_gain">
+        <item>@string/set_effect_gain_off</item>
+        <item>@string/set_effect_gain_3db</item>
+        <item>@string/set_effect_gain_6db</item>
+        <item>@string/set_effect_gain_9db</item>
+    </string-array>
+
+    <integer-array name="values_effect_gain">
+        <item>@integer/effect_gain_off</item>
+        <item>@integer/effect_gain_3db</item>
+        <item>@integer/effect_gain_6db</item>
+        <item>@integer/effect_gain_9db</item>
+    </integer-array>
+
+    <string-array name="entries_reverb_preset">
+        <item>@string/set_reverb_off</item>
+        <item>@string/set_reverb_small_room</item>
+        <item>@string/set_reverb_medium_room</item>
+        <item>@string/set_reverb_large_room</item>
+        <item>@string/set_reverb_medium_hall</item>
+        <item>@string/set_reverb_large_hall</item>
+        <item>@string/set_reverb_plate</item>
+    </string-array>
+
+    <integer-array name="values_reverb_preset">
+        <item>@integer/reverb_off</item>
+        <item>@integer/reverb_small_room</item>
+        <item>@integer/reverb_medium_room</item>
+        <item>@integer/reverb_large_room</item>
+        <item>@integer/reverb_medium_hall</item>
+        <item>@integer/reverb_large_hall</item>
+        <item>@integer/reverb_plate</item>
+    </integer-array>
+
     <integer name="theme_auto">-1</integer>
     <integer name="theme_light">1</integer>
     <integer name="theme_dark">2</integer>
@@ -193,6 +232,19 @@
     <integer name="auto_stop_delay_15m">15</integer>
     <integer name="auto_stop_delay_30m">30</integer>
     <integer name="auto_stop_delay_60m">60</integer>
+
+    <integer name="effect_gain_off">0</integer>
+    <integer name="effect_gain_3db">300</integer>
+    <integer name="effect_gain_6db">600</integer>
+    <integer name="effect_gain_9db">900</integer>
+
+    <integer name="reverb_off">0</integer>
+    <integer name="reverb_small_room">1</integer>
+    <integer name="reverb_medium_room">2</integer>
+    <integer name="reverb_large_room">3</integer>
+    <integer name="reverb_medium_hall">4</integer>
+    <integer name="reverb_large_hall">5</integer>
+    <integer name="reverb_plate">6</integer>
 
     <integer name="action_mode_next">0xA119</integer>
     <integer name="action_mode_repeat">0xA11A</integer>

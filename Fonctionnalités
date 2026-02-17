@@ -1,0 +1,111 @@
+Lecture & lecteur
+
+Lecture programmée – démarrer la lecture à une heure précise.
+
+Minuterie d’arrêt – arrêter la lecture après un temps défini.
+
+Crossfade avancé – fondu entre deux morceaux avec réglage de durée.
+
+Lecture accélérée/lente – changer la vitesse sans altérer la tonalité.
+
+Loop personnalisé – répéter une section précise d’un morceau.
+
+Lecture intelligente – prioriser morceaux peu joués ou récemment ajoutés.
+
+Mode veille – couper la lecture quand l’écran se verrouille.
+
+Écran verrouillé personnalisé – contrôles musicaux et cover sur lockscreen.
+
+Contrôle gestuel – glisser pour changer de morceau ou régler le volume.
+
+Lecture aléatoire intelligente – éviter répétitions immédiates et mixer genres.
+
+2️⃣ Bibliothèque & gestion
+
+Tri automatique – par artiste, album, genre, durée.
+
+Tagging automatique – compléter tags manquants via API musicale.
+
+Détection de doublons – identifier et fusionner fichiers identiques.
+
+Archivage automatique – déplacer morceaux non joués depuis longtemps.
+
+Recherche par paroles – si disponibles dans les tags ou via API.
+
+Mise à jour automatique – scanner régulièrement les dossiers pour nouveaux fichiers.
+
+Favoris multiples – sous-listes de favoris par genre ou humeur.
+
+Filtre par bitrate/format – choisir uniquement FLAC, MP3 320kbps, etc.
+
+Historique complet – voir tous les morceaux joués avec date/heure.
+
+Tags personnalisés – ajouter tags personnalisés pour chaque fichier.
+
+3️⃣ Playlists & organisation
+
+Ajoutés récemment – morceaux ajoutés la dernière semaine.
+
+Joués récemment – historique de lecture de la semaine.
+
+Les plus joués – classement local par compteur de lecture.
+
+Non joués – détecter morceaux jamais lus.
+
+Favoris – playlist automatique des morceaux marqués favoris.
+
+Playlists temporaires – créer playlists pour une durée limitée.
+
+Playlist intelligente – génération automatique selon écoute récente.
+
+Export/Import playlist – sauvegarder ou charger playlists en .m3u ou .json.
+
+Tri custom par utilisateur – trier playlists selon critères perso (genre, BPM…).
+
+Recherche globale – par titre, artiste, album ou tag.
+
+4️⃣ Égaliseur & effets audio
+
+Égaliseur multi-bande – plus de 5 bandes avec presets personnalisables.
+
+Presets par genre – appliquer automatiquement un preset selon style musical.
+
+Effets audio avancés – réverbération, écho, spatialisation stéréo.
+
+Gain normalisé – égaliser le volume entre tous les morceaux.
+
+Amplification – booster le son sans saturation.
+
+Bass boost – augmenter les basses sur demande.
+
+Surround virtuel – simulation stéréo/3D sur casque.
+
+Compression audio – réduire l’écart entre sons faibles et forts.
+
+5️⃣ Interface & expérience utilisateur
+
+Thèmes personnalisés – couleurs et polices modifiables.
+
+Mode nuit automatique – sombre selon l’heure ou luminosité.
+
+Animations cover flow – défilement fluide des pochettes.
+
+Mode compact / mini-lecteur – lecture flottante au-dessus d’autres apps.
+
+Widgets homescreen – contrôle de lecture sur l’écran d’accueil.
+
+Notifications interactives – play/pause, suivant, précédent depuis barre de notif.
+
+Affichage paroles synchronisées – style karaoké.
+
+Affichage visualiseur – animation selon fréquence et amplitude audio.
+
+Raccourcis clavier – commandes pour PC ou Android TV.
+
+Historique récent des dossiers ouverts – revenir rapidement aux dossiers utilisés.
+
+6️⃣ Sauvegarde & export
+
+Sauvegarde paramètres – égaliseur, préférences, dernière position.
+
+Export de playlist et configuration – restaurer sur un autre appareil ou après réinstallation.

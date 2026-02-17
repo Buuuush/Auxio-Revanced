@@ -126,7 +126,12 @@ constructor(
             } else {
                 L.d("Filter specified, reducing library")
                 SearchEngine.Items(
-                    songs = if (filter == MusicType.SONGS) library.songs else null,
+                    songs =
+                        if (filter == MusicType.SONGS || filter == MusicType.FOLDERS) {
+                            library.songs
+                        } else {
+                            null
+                        },
                     albums = if (filter == MusicType.ALBUMS) library.albums else null,
                     artists = if (filter == MusicType.ARTISTS) library.artists else null,
                     genres = if (filter == MusicType.GENRES) library.genres else null,
@@ -199,6 +204,7 @@ constructor(
             MusicType.ARTISTS -> R.id.option_filter_artists
             MusicType.GENRES -> R.id.option_filter_genres
             MusicType.PLAYLISTS -> R.id.option_filter_playlists
+            MusicType.FOLDERS -> R.id.option_filter_songs
             // Null maps to filtering nothing.
             null -> R.id.option_filter_all
         }

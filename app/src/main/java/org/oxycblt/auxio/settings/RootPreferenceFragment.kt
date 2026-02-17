@@ -18,18 +18,28 @@
  
 package org.oxycblt.auxio.settings
 
+import android.net.Uri
 import android.os.Bundle
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
 import com.google.android.material.transition.MaterialFadeThrough
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import org.json.JSONArray
+import org.json.JSONObject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.settings.ui.WrappedDialogPreference
 import org.oxycblt.auxio.util.navigateSafe
+import org.oxycblt.auxio.util.showToast
 import timber.log.Timber as L
 
 /**
@@ -40,9 +50,24 @@ import timber.log.Timber as L
 @AndroidEntryPoint
 class RootPreferenceFragment : BasePreferenceFragment(R.xml.preferences_root) {
     private val musicModel: MusicViewModel by activityViewModels()
+    private var exportLauncher: ActivityResultLauncher<String>? = null
+    private var importLauncher: ActivityResultLauncher<Array<String>>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        exportLauncher =
+            registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) {
+                uri ->
+                if (uri != null) {
+                    exportSettings(uri)
+                }
+            }
+        importLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                importSettings(uri)
+            }
+        }
 
         enterTransition = MaterialFadeThrough()
         returnTransition = MaterialFadeThrough()
@@ -84,9 +109,124 @@ class RootPreferenceFragment : BasePreferenceFragment(R.xml.preferences_root) {
             }
             getString(R.string.set_key_reindex) -> musicModel.refresh()
             getString(R.string.set_key_rescan) -> musicModel.rescan()
+            getString(R.string.set_key_export_settings) -> {
+                requireNotNull(exportLauncher) { "Export launcher unavailable" }
+                    .launch("auxio-settings.json")
+            }
+            getString(R.string.set_key_import_settings) -> {
+                requireNotNull(importLauncher) { "Import launcher unavailable" }
+                    .launch(arrayOf("application/json", "text/plain"))
+            }
             else -> return super.onPreferenceTreeClick(preference)
         }
 
         return true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        exportLauncher = null
+        importLauncher = null
+    }
+
+    private fun exportSettings(uri: Uri) {
+        runCatching {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+            val root = JSONObject()
+            val entries = JSONArray()
+            for ((key, value) in prefs.all) {
+                val obj = JSONObject()
+                obj.put("key", key)
+                when (value) {
+                    is Boolean -> {
+                        obj.put("type", "bool")
+                        obj.put("value", value)
+                    }
+                    is Int -> {
+                        obj.put("type", "int")
+                        obj.put("value", value)
+                    }
+                    is Long -> {
+                        obj.put("type", "long")
+                        obj.put("value", value)
+                    }
+                    is Float -> {
+                        obj.put("type", "float")
+                        obj.put("value", value.toDouble())
+                    }
+                    is String -> {
+                        obj.put("type", "string")
+                        obj.put("value", value)
+                    }
+                    is Set<*> -> {
+                        obj.put("type", "set")
+                        val array = JSONArray()
+                        value.forEach { if (it is String) array.put(it) }
+                        obj.put("value", array)
+                    }
+                    else -> continue
+                }
+                entries.put(obj)
+            }
+            root.put("version", 1)
+            root.put("entries", entries)
+
+            requireContext().contentResolver.openOutputStream(uri).use { stream ->
+                requireNotNull(stream) { "Could not open export file" }
+                OutputStreamWriter(stream).use { writer ->
+                    writer.write(root.toString())
+                    writer.flush()
+                }
+            }
+        }
+            .onSuccess { requireContext().showToast(R.string.lng_settings_exported) }
+            .onFailure {
+                L.e(it, "Settings export failed")
+                requireContext().showToast(R.string.err_settings_export_failed)
+            }
+    }
+
+    private fun importSettings(uri: Uri) {
+        runCatching {
+            val text =
+                requireContext().contentResolver.openInputStream(uri).use { stream ->
+                    requireNotNull(stream) { "Could not open import file" }
+                    BufferedReader(InputStreamReader(stream)).use { it.readText() }
+                }
+            val json = JSONObject(text)
+            val entries = json.getJSONArray("entries")
+            val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+            prefs.edit().clear().apply {
+                for (idx in 0 until entries.length()) {
+                    val obj = entries.getJSONObject(idx)
+                    val key = obj.getString("key")
+                    when (obj.getString("type")) {
+                        "bool" -> putBoolean(key, obj.getBoolean("value"))
+                        "int" -> putInt(key, obj.getInt("value"))
+                        "long" -> putLong(key, obj.getLong("value"))
+                        "float" -> putFloat(key, obj.getDouble("value").toFloat())
+                        "string" -> putString(key, obj.getString("value"))
+                        "set" -> {
+                            val raw = obj.getJSONArray("value")
+                            val set =
+                                buildSet {
+                                    for (i in 0 until raw.length()) {
+                                        add(raw.getString(i))
+                                    }
+                                }
+                            putStringSet(key, set)
+                        }
+                    }
+                }
+            }.apply()
+        }
+            .onSuccess {
+                requireContext().showToast(R.string.lng_settings_imported)
+                requireActivity().recreate()
+            }
+            .onFailure {
+                L.e(it, "Settings import failed")
+                requireContext().showToast(R.string.err_settings_import_failed)
+            }
     }
 }

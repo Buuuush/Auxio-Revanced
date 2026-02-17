@@ -54,6 +54,7 @@ constructor(
     @ApplicationContext context: Context,
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
+    private val smartPlaylistManager: SmartPlaylistManager,
 ) : ViewModel(), MusicRepository.UpdateListener, MusicRepository.IndexingListener {
     private val externalPlaylistManager = ExternalPlaylistManager.from(context)
 
@@ -104,6 +105,10 @@ constructor(
                 library.songs.sumOf { it.size },
             )
         L.d("Updated statistics: ${_statistics.value}")
+
+        viewModelScope.launch(Dispatchers.IO) {
+            smartPlaylistManager.sync()
+        }
     }
 
     override fun onIndexingStateChanged() {
@@ -357,7 +362,9 @@ constructor(
     }
 
     fun isSongLiked(song: Song): Boolean {
-        val likedPlaylist = musicRepository.library?.findPlaylistByName(LIKED_PLAYLIST_NAME) ?: return false
+        val likedPlaylist =
+            musicRepository.library?.findPlaylistByName(SmartPlaylistManager.FAVORITES_PLAYLIST_NAME)
+                ?: return false
         return likedPlaylist.songs.any { it.uid == song.uid }
     }
 
@@ -368,12 +375,16 @@ constructor(
                 return@launch
             }
             musicRepository.addToPlaylist(listOf(song), likedPlaylist)
+            smartPlaylistManager.sync()
         }
     }
 
     fun removeFromLikedSongs(song: Song) {
         viewModelScope.launch(Dispatchers.IO) {
-            val likedPlaylist = musicRepository.library?.findPlaylistByName(LIKED_PLAYLIST_NAME) ?: return@launch
+            val likedPlaylist =
+                musicRepository.library?.findPlaylistByName(
+                    SmartPlaylistManager.FAVORITES_PLAYLIST_NAME
+                ) ?: return@launch
             if (likedPlaylist.songs.none { it.uid == song.uid }) {
                 return@launch
             }
@@ -381,15 +392,20 @@ constructor(
                 likedPlaylist,
                 likedPlaylist.songs.filterNot { it.uid == song.uid },
             )
+            smartPlaylistManager.sync()
         }
     }
 
     private suspend fun getOrCreateLikedPlaylist(): Playlist? {
-        musicRepository.library?.findPlaylistByName(LIKED_PLAYLIST_NAME)?.let {
+        musicRepository.library
+            ?.findPlaylistByName(SmartPlaylistManager.FAVORITES_PLAYLIST_NAME)
+            ?.let {
             return it
         }
-        musicRepository.createPlaylist(LIKED_PLAYLIST_NAME, listOf())
-        return musicRepository.library?.findPlaylistByName(LIKED_PLAYLIST_NAME)
+        musicRepository.createPlaylist(SmartPlaylistManager.FAVORITES_PLAYLIST_NAME, listOf())
+        return musicRepository.library?.findPlaylistByName(
+            SmartPlaylistManager.FAVORITES_PLAYLIST_NAME
+        )
     }
 
     /**
@@ -410,9 +426,6 @@ constructor(
         val totalSizeBytes: Long,
     )
 
-    private companion object {
-        const val LIKED_PLAYLIST_NAME = "Liked Songs"
-    }
 }
 
 /**

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2023 Auxio Project
- * MusicModule.kt is part of Auxio.
+ * Copyright (c) 2024 Auxio Project
+ * Folder.kt is part of Auxio.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,20 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
  
-package org.oxycblt.auxio.music
+package org.oxycblt.auxio.home
 
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import org.oxycblt.musikr.Song
+import org.oxycblt.musikr.fs.Path
 
-@Module
-@InstallIn(SingletonComponent::class)
-interface MusicModule {
-    @Singleton @Binds fun repository(musicRepository: MusicRepositoryImpl): MusicRepository
-
-    @Binds fun settings(musicSettingsImpl: MusicSettingsImpl): MusicSettings
-    
-        @Binds fun playStatsRepository(repository: PlayStatsRepositoryImpl): PlayStatsRepository
-}
+/**
+ * A group of [Song]s that belong to the same file-system folder.
+ */
+data class Folder(
+    val path: Path,
+    val songs: List<Song>,
+)

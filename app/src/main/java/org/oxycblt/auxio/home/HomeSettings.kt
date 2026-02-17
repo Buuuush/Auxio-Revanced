@@ -53,12 +53,14 @@ class HomeSettingsImpl @Inject constructor(@ApplicationContext context: Context)
     Settings.Impl<HomeSettings.Listener>(context), HomeSettings {
     override var homeTabs: Array<Tab>
         get() =
-            Tab.fromIntCode(
-                sharedPreferences.getInt(
-                    getString(R.string.set_key_home_tabs),
-                    Tab.SEQUENCE_DEFAULT,
-                )
-            ) ?: unlikelyToBeNull(Tab.fromIntCode(Tab.SEQUENCE_DEFAULT))
+            ensureFolderTab(
+                Tab.fromIntCode(
+                    sharedPreferences.getInt(
+                        getString(R.string.set_key_home_tabs),
+                        Tab.SEQUENCE_DEFAULT,
+                    )
+                ) ?: unlikelyToBeNull(Tab.fromIntCode(Tab.SEQUENCE_DEFAULT))
+            )
         set(value) {
             sharedPreferences.edit {
                 putInt(getString(R.string.set_key_home_tabs), Tab.toIntCode(value))
@@ -81,10 +83,11 @@ class HomeSettingsImpl @Inject constructor(@ApplicationContext context: Context)
             val playlistIndex = oldTabs.indexOfFirst { it.type == MusicType.PLAYLISTS }
             check(playlistIndex > -1) // This should exist, otherwise we are in big trouble
             oldTabs[playlistIndex] = Tab.Visible(MusicType.PLAYLISTS)
-            L.d("New tabs: $oldTabs")
+            val migratedTabs = ensureFolderTab(oldTabs)
+            L.d("New tabs: $migratedTabs")
 
             sharedPreferences.edit {
-                putInt(getString(R.string.set_key_home_tabs), Tab.toIntCode(oldTabs))
+                putInt(getString(R.string.set_key_home_tabs), Tab.toIntCode(migratedTabs))
                 remove(OLD_KEY_LIB_TABS)
             }
         }
@@ -105,5 +108,13 @@ class HomeSettingsImpl @Inject constructor(@ApplicationContext context: Context)
 
     companion object {
         const val OLD_KEY_LIB_TABS = "auxio_lib_tabs"
+
+        private fun ensureFolderTab(tabs: Array<Tab>): Array<Tab> {
+            if (tabs.any { it.type == MusicType.FOLDERS }) {
+                return tabs
+            }
+
+            return tabs.toMutableList().apply { add(Tab.Visible(MusicType.FOLDERS)) }.toTypedArray()
+        }
     }
 }

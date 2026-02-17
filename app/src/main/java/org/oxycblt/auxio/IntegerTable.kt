@@ -91,6 +91,8 @@ object IntegerTable {
     const val MUSIC_MODE_GENRES = 0xA108
     /** MusicMode.PLAYLISTS */
     const val MUSIC_MODE_PLAYLISTS = 0xA107
+    /** MusicMode.FOLDERS */
+    const val MUSIC_MODE_FOLDERS = 0xA12B
     /** Sort.Mode.ByName */
     const val SORT_BY_NAME = 0xA10C
     /** Sort.Mode.ByArtist */

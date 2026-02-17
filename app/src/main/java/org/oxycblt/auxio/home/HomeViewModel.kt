@@ -133,6 +133,16 @@ constructor(
     val playlistSort: Sort
         get() = listSettings.playlistSort
 
+    private val _folderList = MutableStateFlow(listOf<Folder>())
+    /** A list of [Folder]s to be shown in the home view. */
+    val folderList: StateFlow<List<Folder>>
+        get() = _folderList
+
+    private val _folderInstructions = MutableEvent<UpdateInstructions>()
+    /** Instructions for how to update [folderList] in the UI. */
+    val folderInstructions: Event<UpdateInstructions>
+        get() = _folderInstructions
+
     private val homeGenerator = homeGeneratorFactory.create(this)
 
     /**
@@ -201,6 +211,10 @@ constructor(
             MusicType.PLAYLISTS -> {
                 _playlistInstructions.put(instructions)
                 _playlistList.value = homeGenerator.playlists()
+            }
+            MusicType.FOLDERS -> {
+                _folderInstructions.put(instructions)
+                _folderList.value = homeGenerator.folders()
             }
         }
     }

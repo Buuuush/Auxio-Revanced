@@ -31,6 +31,8 @@ import org.oxycblt.auxio.AuxioService.Companion.INTENT_KEY_START_ID
 import org.oxycblt.auxio.ForegroundListener
 import org.oxycblt.auxio.ForegroundServiceNotification
 import org.oxycblt.auxio.IntegerTable
+import org.oxycblt.auxio.music.PlayStatsRepository
+import org.oxycblt.auxio.music.SmartPlaylistManager
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.playback.state.DeferredPlayback
 import org.oxycblt.auxio.playback.state.PlaybackStateManager
@@ -46,6 +48,8 @@ private constructor(
     private val foregroundListener: ForegroundListener,
     private val playbackManager: PlaybackStateManager,
     private val playbackSettings: PlaybackSettings,
+    private val playStatsRepository: PlayStatsRepository,
+    private val smartPlaylistManager: SmartPlaylistManager,
     exoHolderFactory: ExoPlaybackStateHolder.Factory,
     sessionHolderFactory: MediaSessionHolder.Factory,
     widgetComponentFactory: WidgetComponent.Factory,
@@ -56,6 +60,8 @@ private constructor(
     constructor(
         private val playbackManager: PlaybackStateManager,
         private val playbackSettings: PlaybackSettings,
+        private val playStatsRepository: PlayStatsRepository,
+        private val smartPlaylistManager: SmartPlaylistManager,
         private val exoHolderFactory: ExoPlaybackStateHolder.Factory,
         private val sessionHolderFactory: MediaSessionHolder.Factory,
         private val widgetComponentFactory: WidgetComponent.Factory,
@@ -67,6 +73,8 @@ private constructor(
                 foregroundListener,
                 playbackManager,
                 playbackSettings,
+                playStatsRepository,
+                smartPlaylistManager,
                 exoHolderFactory,
                 sessionHolderFactory,
                 widgetComponentFactory,
@@ -77,6 +85,7 @@ private constructor(
     private val waitJob = Job()
     private val scope = CoroutineScope(Dispatchers.Main + waitJob)
     private var autoStopJob: Job? = null
+    private var lastRecordedSongUid: String? = null
     private val exoHolder = exoHolderFactory.create()
     private val sessionHolder = sessionHolderFactory.create(context, foregroundListener)
     private val widgetComponent = widgetComponentFactory.create(context)
@@ -194,15 +203,41 @@ private constructor(
         isShuffled: Boolean,
     ) {
         cancelAutoStop()
+        lastRecordedSongUid = null
+        if (playbackManager.progression.isPlaying) {
+            recordCurrentSongPlay()
+        }
+    }
+
+    override fun onIndexMoved(index: Int) {
+        if (playbackManager.progression.isPlaying) {
+            recordCurrentSongPlay()
+        }
     }
 
     override fun onProgressionChanged(progression: Progression) {
         // Update timer whenever play/pause state changes
         updateAutoStopTimer(progression.isPlaying)
+        if (progression.isPlaying) {
+            recordCurrentSongPlay()
+        }
     }
 
     override fun onSessionEnded() {
+        lastRecordedSongUid = null
         foregroundListener.updateForeground(ForegroundListener.Change.MEDIA_SESSION)
+    }
+
+    private fun recordCurrentSongPlay() {
+        val song = playbackManager.currentSong ?: return
+        val uid = song.uid.toString()
+        if (uid == lastRecordedSongUid) {
+            return
+        }
+
+        lastRecordedSongUid = uid
+        playStatsRepository.recordPlayed(song.uid)
+        scope.launch(Dispatchers.IO) { smartPlaylistManager.sync() }
     }
 
     private companion object

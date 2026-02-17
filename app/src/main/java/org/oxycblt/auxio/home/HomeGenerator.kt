@@ -48,6 +48,8 @@ interface HomeGenerator {
 
     fun playlists(): List<Playlist>
 
+    fun folders(): List<Folder>
+
     fun tabs(): List<MusicType>
 
     interface Invalidator {
@@ -100,6 +102,7 @@ private class HomeGeneratorImpl(
     override fun onSongSortChanged() {
         super.onSongSortChanged()
         invalidator.invalidateMusic(MusicType.SONGS, UpdateInstructions.Replace(0))
+        invalidator.invalidateMusic(MusicType.FOLDERS, UpdateInstructions.Replace(0))
     }
 
     override fun onAlbumSortChanged() {
@@ -134,6 +137,7 @@ private class HomeGeneratorImpl(
             invalidator.invalidateMusic(MusicType.ALBUMS, UpdateInstructions.Diff)
             invalidator.invalidateMusic(MusicType.ARTISTS, UpdateInstructions.Diff)
             invalidator.invalidateMusic(MusicType.GENRES, UpdateInstructions.Diff)
+            invalidator.invalidateMusic(MusicType.FOLDERS, UpdateInstructions.Diff)
         }
 
         if (changes.userLibrary && library != null) {
@@ -171,6 +175,14 @@ private class HomeGeneratorImpl(
 
     override fun playlists() =
         musicRepository.library?.let { listSettings.playlistSort.playlists(it.playlists) }
+            ?: emptyList()
+
+    override fun folders() =
+        musicRepository.library
+            ?.songs
+            ?.groupBy { it.path.directory }
+            ?.map { (path, songs) -> Folder(path, songs) }
+            ?.sortedBy { it.path.components.unixString }
             ?: emptyList()
 
     override fun tabs() = homeSettings.homeTabs.filterIsInstance<Tab.Visible>().map { it.type }

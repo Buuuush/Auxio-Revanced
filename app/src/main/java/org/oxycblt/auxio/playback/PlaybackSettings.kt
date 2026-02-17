@@ -45,6 +45,10 @@ interface PlaybackSettings : Settings<PlaybackSettings.Listener> {
     val replayGainMode: ReplayGainMode
     /** The current ReplayGain pre-amp configuration. */
     var replayGainPreAmp: ReplayGainPreAmp
+    /** Additional amplification in millibels applied to the active audio session. */
+    val effectGainMb: Int
+    /** Reverb preset ID applied to the active audio session. 0 disables reverb. */
+    val reverbPreset: Int
     /** How to play a song from a general list of songs, specified by [PlaySong] */
     val playInListWith: PlaySong
     /**
@@ -72,6 +76,9 @@ interface PlaybackSettings : Settings<PlaybackSettings.Listener> {
 
         /** Called when [pauseOnRepeat] has changed. */
         fun onPauseOnRepeatChanged() {}
+
+        /** Called when advanced playback effects have changed. */
+        fun onAdvancedEffectsChanged() {}
     }
 }
 
@@ -130,6 +137,12 @@ class PlaybackSettingsImpl @Inject constructor(@ApplicationContext context: Cont
                 apply()
             }
         }
+
+    override val effectGainMb: Int
+        get() = sharedPreferences.getInt(getString(R.string.set_key_effect_gain), 0)
+
+    override val reverbPreset: Int
+        get() = sharedPreferences.getInt(getString(R.string.set_key_reverb_preset), 0)
 
     override val keepShuffle: Boolean
         get() = sharedPreferences.getBoolean(getString(R.string.set_key_keep_shuffle), true)
@@ -209,6 +222,11 @@ class PlaybackSettingsImpl @Inject constructor(@ApplicationContext context: Cont
             getString(R.string.set_key_repeat_pause) -> {
                 L.d("Dispatching pause on repeat change")
                 listener.onPauseOnRepeatChanged()
+            }
+            getString(R.string.set_key_effect_gain),
+            getString(R.string.set_key_reverb_preset) -> {
+                L.d("Dispatching advanced effects setting change")
+                listener.onAdvancedEffectsChanged()
             }
         }
     }

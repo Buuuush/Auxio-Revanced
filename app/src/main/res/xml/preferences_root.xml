@@ -45,4 +45,20 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory app:title="@string/set_backup">
+
+        <Preference
+            app:icon="@drawable/ic_save_24"
+            app:key="@string/set_key_export_settings"
+            app:summary="@string/set_export_settings_desc"
+            app:title="@string/set_export_settings" />
+
+        <Preference
+            app:icon="@drawable/ic_import_24"
+            app:key="@string/set_key_import_settings"
+            app:summary="@string/set_import_settings_desc"
+            app:title="@string/set_import_settings" />
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

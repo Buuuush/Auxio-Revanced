@@ -52,5 +52,23 @@
             app:summary="@string/set_pre_amp_desc"
             app:title="@string/set_pre_amp" />
 
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/effect_gain_off"
+            app:entries="@array/entries_effect_gain"
+            app:entryValues="@array/values_effect_gain"
+            app:key="@string/set_key_effect_gain"
+            app:summary="@string/set_effect_gain_desc"
+            app:title="@string/set_effect_gain"
+            app:useSimpleSummaryProvider="true" />
+
+        <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/reverb_off"
+            app:entries="@array/entries_reverb_preset"
+            app:entryValues="@array/values_reverb_preset"
+            app:key="@string/set_key_reverb_preset"
+            app:summary="@string/set_reverb_desc"
+            app:title="@string/set_reverb"
+            app:useSimpleSummaryProvider="true" />
+
     </PreferenceCategory>
 </PreferenceScreen>

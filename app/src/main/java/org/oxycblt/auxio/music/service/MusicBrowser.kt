@@ -208,6 +208,8 @@ private constructor(
                     MusicType.ARTISTS -> homeGenerator.artists().map { it.toMediaItem(context) }
                     MusicType.GENRES -> homeGenerator.genres().map { it.toMediaItem(context) }
                     MusicType.PLAYLISTS -> homeGenerator.playlists().map { it.toMediaItem(context) }
+                    MusicType.FOLDERS ->
+                        homeGenerator.folders().flatMap { it.songs }.map { it.toMediaItem(context) }
                 }
         }
 
