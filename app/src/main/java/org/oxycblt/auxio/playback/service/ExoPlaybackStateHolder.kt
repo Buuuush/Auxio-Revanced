@@ -21,6 +21,7 @@ package org.oxycblt.auxio.playback.service
 import android.content.Context
 import android.content.Intent
 import android.media.audiofx.AudioEffect
+import android.media.audiofx.BassBoost
 import android.media.audiofx.Equalizer
 import android.media.audiofx.LoudnessEnhancer
 import android.media.audiofx.PresetReverb
@@ -95,6 +96,7 @@ class ExoPlaybackStateHolder(
     private var pendingCrossfadeFadeIn = false
     private var openAudioEffectSession = false
     private var loudnessEnhancer: LoudnessEnhancer? = null
+    private var bassBoost: BassBoost? = null
     private var equalizer: Equalizer? = null
     private var presetReverb: PresetReverb? = null
 
@@ -642,6 +644,8 @@ class ExoPlaybackStateHolder(
     private fun releaseAdvancedEffects() {
         loudnessEnhancer?.release()
         loudnessEnhancer = null
+        bassBoost?.release()
+        bassBoost = null
         equalizer?.release()
         equalizer = null
         presetReverb?.release()
@@ -662,6 +666,15 @@ class ExoPlaybackStateHolder(
                 loudnessEnhancer =
                     LoudnessEnhancer(sessionId).apply {
                         setTargetGain(gainMb)
+                        enabled = true
+                    }
+            }
+
+            val bassBoostStrength = playbackSettings.bassBoostStrength
+            if (bassBoostStrength > 0) {
+                bassBoost =
+                    BassBoost(0, sessionId).apply {
+                        setStrength(bassBoostStrength.coerceIn(0, 1000).toShort())
                         enabled = true
                     }
             }

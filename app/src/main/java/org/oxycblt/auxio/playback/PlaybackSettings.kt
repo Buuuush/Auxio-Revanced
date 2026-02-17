@@ -51,6 +51,8 @@ interface PlaybackSettings : Settings<PlaybackSettings.Listener> {
     var replayGainPreAmp: ReplayGainPreAmp
     /** Additional amplification in millibels applied to the active audio session. */
     val effectGainMb: Int
+    /** Bass boost strength applied to the active audio session. 0 disables bass boost. */
+    val bassBoostStrength: Int
     /** Equalizer preset ID applied to the active audio session. 0 disables equalizer. */
     val equalizerPreset: Int
     /** Whether equalizer preset should be automatically selected from current song genre. */
@@ -159,6 +161,9 @@ class PlaybackSettingsImpl @Inject constructor(@ApplicationContext context: Cont
     override val effectGainMb: Int
         get() = sharedPreferences.getInt(getString(R.string.set_key_effect_gain), 0)
 
+    override val bassBoostStrength: Int
+        get() = sharedPreferences.getInt(getString(R.string.set_key_bass_boost), 0)
+
     override val equalizerPreset: Int
         get() = sharedPreferences.getInt(getString(R.string.set_key_equalizer_preset), 0)
 
@@ -248,6 +253,7 @@ class PlaybackSettingsImpl @Inject constructor(@ApplicationContext context: Cont
                 listener.onPauseOnRepeatChanged()
             }
             getString(R.string.set_key_effect_gain),
+            getString(R.string.set_key_bass_boost),
             getString(R.string.set_key_crossfade_duration),
             getString(R.string.set_key_equalizer_preset),
             getString(R.string.set_key_equalizer_auto_genre),
