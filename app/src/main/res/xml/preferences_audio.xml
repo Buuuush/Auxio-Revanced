@@ -28,6 +28,21 @@
             app:useSimpleSummaryProvider="true" />
 
         <org.oxycblt.auxio.settings.ui.IntListPreference
+            app:defaultValue="@integer/custom_loop_off"
+            app:entries="@array/entries_custom_loop_duration"
+            app:entryValues="@array/values_custom_loop_duration"
+            app:key="@string/set_key_custom_loop_duration"
+            app:summary="@string/set_custom_loop_duration_desc"
+            app:title="@string/set_custom_loop_duration"
+            app:useSimpleSummaryProvider="true" />
+
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:key="@string/set_key_compact_player_mode"
+            app:summary="@string/set_compact_player_mode_desc"
+            app:title="@string/set_compact_player_mode" />
+
+        <org.oxycblt.auxio.settings.ui.IntListPreference
             app:defaultValue="@integer/crossfade_off"
             app:entries="@array/entries_crossfade_duration"
             app:entryValues="@array/values_crossfade_duration"

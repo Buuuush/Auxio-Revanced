@@ -52,10 +52,11 @@ import timber.log.Timber as L
 class MusicViewModel
 @Inject
 constructor(
-    @ApplicationContext context: Context,
+    @ApplicationContext private val context: Context,
     private val listSettings: ListSettings,
     private val musicRepository: MusicRepository,
     private val smartPlaylistManager: SmartPlaylistManager,
+    private val customTagsRepository: CustomTagsRepository,
 ) : ViewModel(), MusicRepository.UpdateListener, MusicRepository.IndexingListener {
     private val externalPlaylistManager = ExternalPlaylistManager.from(context)
 
@@ -82,6 +83,10 @@ constructor(
     private val _playlistMessage = MutableEvent<PlaylistMessage>()
     val playlistMessage: Event<PlaylistMessage>
         get() = _playlistMessage
+
+    private val _customTagsDecision = MutableEvent<CustomTagsDecision>()
+    val customTagsDecision: Event<CustomTagsDecision>
+        get() = _customTagsDecision
 
     init {
         musicRepository.addUpdateListener(this)
@@ -399,6 +404,14 @@ constructor(
         }
     }
 
+    fun createArtistRadio(artist: Artist) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val artistName = artist.name.resolve(context)
+            smartPlaylistManager.createArtistRadio(artistName, maxSongs = 50)
+            _playlistMessage.put(PlaylistMessage.ArtistRadioCreated(artistName))
+        }
+    }
+
     private suspend fun getOrCreateLikedPlaylist(): Playlist? {
         musicRepository.library
             ?.findPlaylistByName(SmartPlaylistManager.FAVORITES_PLAYLIST_NAME)
@@ -429,6 +442,21 @@ constructor(
         val totalSizeBytes: Long,
     )
 
+}
+
+/**
+ * Navigation command for when custom tags must be edited on a [Song].
+ *
+ * @author Alexander Capehart (OxygenCobalt)
+ */
+sealed interface CustomTagsDecision {
+    /**
+     * Navigate to a dialog that allows the user to edit custom tags for a [Song].
+     *
+     * @param song The song to edit tags for.
+     * @param currentTags The current tags for the song.
+     */
+    data class Edit(val song: Song, val currentTags: List<String>) : CustomTagsDecision
 }
 
 /**
@@ -543,5 +571,10 @@ sealed interface PlaylistMessage {
     data object ExportFailed : PlaylistMessage {
         override val stringRes: Int
             get() = R.string.err_export_failed
+    }
+
+    data class ArtistRadioCreated(val artistName: String) : PlaylistMessage {
+        override val stringRes: Int
+            get() = R.string.lng_playlist_created
     }
 }

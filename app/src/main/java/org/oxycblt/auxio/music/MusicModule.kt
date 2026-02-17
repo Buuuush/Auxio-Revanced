@@ -31,5 +31,7 @@ interface MusicModule {
 
     @Binds fun settings(musicSettingsImpl: MusicSettingsImpl): MusicSettings
     
-        @Binds fun playStatsRepository(repository: PlayStatsRepositoryImpl): PlayStatsRepository
+    @Binds fun playStatsRepository(repository: PlayStatsRepositoryImpl): PlayStatsRepository
+
+    @Binds fun customTagsRepository(repository: CustomTagsRepositoryImpl): CustomTagsRepository
 }

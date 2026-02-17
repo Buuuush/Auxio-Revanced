@@ -29,10 +29,12 @@ import android.view.ViewTreeObserver
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.dynamicanimation.animation.SpringForce
 import androidx.fragment.app.activityViewModels
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.FragmentPlaybackPanelBinding
 import org.oxycblt.auxio.detail.DetailViewModel
@@ -63,6 +65,7 @@ import timber.log.Timber as L
 class PlaybackPanelFragment :
     ViewBindingFragment<FragmentPlaybackPanelBinding>(),
     Toolbar.OnMenuItemClickListener,
+    PlaybackSettings.Listener,
     StyledSeekBar.Listener,
     ViewTreeObserver.OnGlobalLayoutListener,
     PlayerFastSeekOverlay.PerformListener {
@@ -71,6 +74,7 @@ class PlaybackPanelFragment :
     private val listModel: ListViewModel by activityViewModels()
     private var equalizerLauncher: ActivityResultLauncher<Intent>? = null
     private var lastCoverWidth = 0
+    @Inject lateinit var playbackSettings: PlaybackSettings
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         FragmentPlaybackPanelBinding.inflate(inflater)
@@ -122,6 +126,8 @@ class PlaybackPanelFragment :
         }
 
         binding.playbackSeekBar?.listener = this
+        playbackSettings.registerListener(this)
+        updateCompactMode()
 
         // Set up actions
         // TODO: Add better playback button accessibility
@@ -189,6 +195,7 @@ class PlaybackPanelFragment :
     }
 
     override fun onDestroyBinding(binding: FragmentPlaybackPanelBinding) {
+        playbackSettings.unregisterListener(this)
         equalizerLauncher = null
         binding.playbackSong.isSelected = false
         binding.playbackArtist.isSelected = false
@@ -222,6 +229,13 @@ class PlaybackPanelFragment :
 
     override fun onSeekConfirmed(positionDs: Long) {
         playbackModel.seekTo(positionDs)
+    }
+
+    override fun onCompactPlayerModeChanged() {
+        super.onCompactPlayerModeChanged()
+        if (binding != null) {
+            updateCompactMode()
+        }
     }
 
     private fun updateSong(song: Song?) {
@@ -265,6 +279,12 @@ class PlaybackPanelFragment :
 
     private fun updateShuffled(isShuffled: Boolean) {
         requireBinding().playbackShuffle.isChecked = isShuffled
+    }
+
+    private fun updateCompactMode() {
+        val compact = playbackSettings.compactPlayerMode
+        requireBinding().playbackRepeat.isVisible = !compact
+        requireBinding().playbackShuffle.isVisible = !compact
     }
 
     private fun navigateToCurrentSong() {

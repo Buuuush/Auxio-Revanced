@@ -31,6 +31,8 @@
     <string name="set_key_headset_autoplay" translatable="false">auxio_headset_autoplay</string>
     <string name="set_key_auto_stop_delay" translatable="false">auxio_auto_stop_delay</string>
     <string name="set_key_auto_start_delay" translatable="false">auxio_auto_start_delay</string>
+    <string name="set_key_custom_loop_duration" translatable="false">auxio_custom_loop_duration</string>
+    <string name="set_key_compact_player_mode" translatable="false">auxio_compact_player_mode</string>
     <string name="set_key_crossfade_duration" translatable="false">auxio_crossfade_duration</string>
     <string name="set_key_replay_gain" translatable="false">auxio_replay_gain</string>
     <string name="set_key_pre_amp" translatable="false">auxio_pre_amp</string>
@@ -184,6 +186,14 @@
         <item>@string/set_crossfade_8s</item>
     </string-array>
 
+    <string-array name="entries_custom_loop_duration">
+        <item>@string/set_custom_loop_off</item>
+        <item>@string/set_custom_loop_15s</item>
+        <item>@string/set_custom_loop_30s</item>
+        <item>@string/set_custom_loop_60s</item>
+        <item>@string/set_custom_loop_120s</item>
+    </string-array>
+
     <integer-array name="values_replay_gain">
         <item>@integer/replay_gain_off</item>
         <item>@integer/replay_gain_track</item>
@@ -211,6 +221,14 @@
         <item>@integer/crossfade_4s</item>
         <item>@integer/crossfade_6s</item>
         <item>@integer/crossfade_8s</item>
+    </integer-array>
+
+    <integer-array name="values_custom_loop_duration">
+        <item>@integer/custom_loop_off</item>
+        <item>@integer/custom_loop_15s</item>
+        <item>@integer/custom_loop_30s</item>
+        <item>@integer/custom_loop_60s</item>
+        <item>@integer/custom_loop_120s</item>
     </integer-array>
 
     <string-array name="entries_effect_gain">
@@ -310,6 +328,12 @@
     <integer name="crossfade_4s">4000</integer>
     <integer name="crossfade_6s">6000</integer>
     <integer name="crossfade_8s">8000</integer>
+
+    <integer name="custom_loop_off">0</integer>
+    <integer name="custom_loop_15s">15000</integer>
+    <integer name="custom_loop_30s">30000</integer>
+    <integer name="custom_loop_60s">60000</integer>
+    <integer name="custom_loop_120s">120000</integer>
 
     <integer name="effect_gain_off">0</integer>
     <integer name="effect_gain_3db">300</integer>

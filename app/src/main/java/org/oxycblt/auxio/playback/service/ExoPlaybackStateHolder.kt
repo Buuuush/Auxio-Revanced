@@ -591,7 +591,8 @@ class ExoPlaybackStateHolder(
         crossfadeJob?.cancel()
 
         val crossfadeMs = playbackSettings.crossfadeDurationMs
-        if (crossfadeMs <= 0) {
+        val customLoopMs = playbackSettings.customLoopDurationMs
+        if (crossfadeMs <= 0 && customLoopMs <= 0) {
             pendingCrossfadeFadeIn = false
             player.volume = 1f
             return
@@ -600,10 +601,27 @@ class ExoPlaybackStateHolder(
         crossfadeJob =
             crossfadeScope.launch {
                 while (isActive) {
-                    applyCrossfade(crossfadeMs)
+                    applyCustomLoop(customLoopMs)
+                    if (crossfadeMs > 0) {
+                        applyCrossfade(crossfadeMs)
+                    } else {
+                        player.volume = 1f
+                    }
                     delay(CROSSFADE_MONITOR_DELAY_MS)
                 }
             }
+    }
+
+    private fun applyCustomLoop(customLoopMs: Int) {
+        if (customLoopMs <= 0 || !player.playWhenReady || !player.isPlaying) {
+            return
+        }
+
+        val position = player.currentPosition.coerceAtLeast(0L)
+        val loopPoint = customLoopMs.toLong()
+        if (position >= loopPoint) {
+            player.seekTo(0L)
+        }
     }
 
     private fun applyCrossfade(crossfadeMs: Int) {
@@ -662,10 +680,13 @@ class ExoPlaybackStateHolder(
 
         try {
             val gainMb = playbackSettings.effectGainMb
-            if (gainMb > 0) {
+            val normalizationGainMb = playbackSettings.normalizationGainMb
+            val totalGainMb = gainMb + normalizationGainMb
+            
+            if (totalGainMb > 0) {
                 loudnessEnhancer =
                     LoudnessEnhancer(sessionId).apply {
-                        setTargetGain(gainMb)
+                        setTargetGain(totalGainMb)
                         enabled = true
                     }
             }

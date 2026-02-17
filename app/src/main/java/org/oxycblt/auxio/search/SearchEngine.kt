@@ -22,6 +22,7 @@ import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.text.Normalizer
 import javax.inject.Inject
+import org.oxycblt.auxio.music.CustomTagsRepository
 import org.oxycblt.auxio.music.resolve
 import org.oxycblt.musikr.Album
 import org.oxycblt.musikr.Artist
@@ -65,8 +66,10 @@ interface SearchEngine {
     )
 }
 
-class SearchEngineImpl @Inject constructor(@ApplicationContext private val context: Context) :
-    SearchEngine {
+class SearchEngineImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val customTagsRepository: CustomTagsRepository,
+) : SearchEngine {
     override suspend fun search(items: SearchEngine.Items, query: String): SearchEngine.Items {
         L.d("Launching search for $query")
         return SearchEngine.Items(
@@ -78,7 +81,8 @@ class SearchEngineImpl @Inject constructor(@ApplicationContext private val conte
                         song.genres.any { it.name.resolve(context).contains(q, ignoreCase = true) } ||
                         song.date?.toString()?.contains(q, ignoreCase = true) == true ||
                         song.track?.toString()?.contains(q, ignoreCase = true) == true ||
-                        song.disc?.number?.toString()?.contains(q, ignoreCase = true) == true
+                        song.disc?.number?.toString()?.contains(q, ignoreCase = true) == true ||
+                        customTagsRepository.getTags(song.uid).any { it.contains(q, ignoreCase = true) }
                 },
             albums = items.albums?.searchListImpl(query),
             artists = items.artists?.searchListImpl(query),

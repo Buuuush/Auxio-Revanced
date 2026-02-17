@@ -325,6 +325,15 @@
     <string name="set_auto_start_delay">Scheduled playback</string>
     <string name="set_auto_start_delay_desc">Automatically resume playback after a delay while paused</string>
     <string name="set_auto_start_delay_off">Off</string>
+    <string name="set_custom_loop_duration">Custom loop</string>
+    <string name="set_custom_loop_duration_desc">Loop the beginning of each track using a fixed duration</string>
+    <string name="set_custom_loop_off">Off</string>
+    <string name="set_custom_loop_15s">15 seconds</string>
+    <string name="set_custom_loop_30s">30 seconds</string>
+    <string name="set_custom_loop_60s">1 minute</string>
+    <string name="set_custom_loop_120s">2 minutes</string>
+    <string name="set_compact_player_mode">Compact mini-player</string>
+    <string name="set_compact_player_mode_desc">Show a simplified set of controls in the expanded playback panel</string>
     <string name="set_crossfade_duration">Crossfade</string>
     <string name="set_crossfade_duration_desc">Fade out the current track and fade in the next one around transitions</string>
     <string name="set_crossfade_off">Off</string>

@@ -43,6 +43,10 @@ interface PlaybackSettings : Settings<PlaybackSettings.Listener> {
     val autoStopDelayMinutes: Int
     /** Delay in minutes before auto-resuming playback while paused. 0 disables scheduling. */
     val autoStartDelayMinutes: Int
+    /** Duration of custom loop in milliseconds. 0 disables custom loop. */
+    val customLoopDurationMs: Int
+    /** Whether expanded playback panel should use compact mini-player controls. */
+    val compactPlayerMode: Boolean
     /** Duration of crossfade transition in milliseconds. 0 disables crossfade. */
     val crossfadeDurationMs: Int
     /** The current ReplayGain configuration. */
@@ -53,6 +57,8 @@ interface PlaybackSettings : Settings<PlaybackSettings.Listener> {
     val effectGainMb: Int
     /** Bass boost strength applied to the active audio session. 0 disables bass boost. */
     val bassBoostStrength: Int
+    /** Volume normalization gain in millibels. 0 means no normalization. */
+    val normalizationGainMb: Int
     /** Equalizer preset ID applied to the active audio session. 0 disables equalizer. */
     val equalizerPreset: Int
     /** Whether equalizer preset should be automatically selected from current song genre. */
@@ -89,6 +95,9 @@ interface PlaybackSettings : Settings<PlaybackSettings.Listener> {
 
         /** Called when advanced playback effects have changed. */
         fun onAdvancedEffectsChanged() {}
+
+        /** Called when compact player mode visibility has changed. */
+        fun onCompactPlayerModeChanged() {}
     }
 }
 
@@ -134,6 +143,15 @@ class PlaybackSettingsImpl @Inject constructor(@ApplicationContext context: Cont
                 getString(R.string.set_key_auto_start_delay),
                 0,
             )
+
+    override val customLoopDurationMs: Int
+        get() = sharedPreferences.getInt(getString(R.string.set_key_custom_loop_duration), 0)
+
+    override val compactPlayerMode: Boolean
+        get() = sharedPreferences.getBoolean(getString(R.string.set_key_compact_player_mode), false)
+
+    override val normalizationGainMb: Int
+        get() = sharedPreferences.getInt(getString(R.string.set_key_normalization_gain), 0)
 
     override val crossfadeDurationMs: Int
         get() = sharedPreferences.getInt(getString(R.string.set_key_crossfade_duration), 0)
@@ -252,8 +270,13 @@ class PlaybackSettingsImpl @Inject constructor(@ApplicationContext context: Cont
                 L.d("Dispatching pause on repeat change")
                 listener.onPauseOnRepeatChanged()
             }
+            getString(R.string.set_key_compact_player_mode) -> {
+                L.d("Dispatching compact player mode change")
+                listener.onCompactPlayerModeChanged()
+            }
             getString(R.string.set_key_effect_gain),
             getString(R.string.set_key_bass_boost),
+            getString(R.string.set_key_custom_loop_duration),
             getString(R.string.set_key_crossfade_duration),
             getString(R.string.set_key_equalizer_preset),
             getString(R.string.set_key_equalizer_auto_genre),
